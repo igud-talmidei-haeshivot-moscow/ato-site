@@ -333,10 +333,67 @@
       color: var(--gold);
       text-decoration: none;
     }
+    /* Верхняя плашка зманим (Москва) */
+    .zmanim-bar {
+      background-color: #0D192B;
+      color: var(--cream);
+      border-bottom: 2px solid var(--gold);
+      padding: 0.55rem 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    .zmanim-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem 1.5rem;
+    }
+
+    .zmanim-city {
+      font-family: 'Oswald', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .zmanim-times {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.75rem;
+    }
+
+    .zmanim-item span {
+      color: #D6DEC9;
+    }
+
+    .zmanim-item strong {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      color: #FFFFFF;
+      margin-left: 0.35rem;
+    }
   </style>
 </head>
 <body>
-
+<div class="zmanim-bar">
+    <div class="container zmanim-inner">
+      <div class="zmanim-city">▪ Зманим • Москва</div>
+      <div class="zmanim-times">
+        <div class="zmanim-item">
+          <span>Зажигание свечей:</span>
+          <strong id="candleTime">загрузка...</strong>
+        </div>
+        <div class="zmanim-item">
+          <span>Выход Шаббата:</span>
+          <strong id="havdalahTime">загрузка...</strong>
+        </div>
+      </div>
+    </div>
+  </div>
   <header>
     <div class="container header-grid">
       <div class="brand-block">
@@ -630,6 +687,43 @@
 
     document.getElementById("searchInput").addEventListener("input", renderContent);
     init();
+    async function loadMoscowZmanim() {
+      const candleEl = document.getElementById("candleTime");
+      const havdalahEl = document.getElementById("havdalahTime");
+
+      try {
+        // geonameid=524901 — Москва, b=18 — зажигание за 18 мин до заката, M=on — выход Шаббата (цет а-кохавим)
+        const res = await fetch("https://www.hebcal.com/shabbat?cfg=json&geonameid=524901&b=18&M=on");
+        if (!res.ok) throw new Error("Ошибка загрузки зманим");
+        const data = await res.json();
+
+        const formatMsk = (isoStr) => {
+          const d = new Date(isoStr);
+          const time = d.toLocaleTimeString("ru-RU", {
+            timeZone: "Europe/Moscow",
+            hour: "2-digit",
+            minute: "2-digit"
+          });
+          const date = d.toLocaleDateString("ru-RU", {
+            timeZone: "Europe/Moscow",
+            day: "2-digit",
+            month: "2-digit"
+          });
+          return `${time} (${date})`;
+        };
+
+        const candles = data.items.find(item => item.category === "candles");
+        const havdalah = data.items.find(item => item.category === "havdalah");
+
+        if (candles) candleEl.textContent = formatMsk(candles.date);
+        if (havdalah) havdalahEl.textContent = formatMsk(havdalah.date);
+      } catch (err) {
+        candleEl.textContent = "—";
+        havdalahEl.textContent = "—";
+      }
+    }
+
+    loadMoscowZmanim();
   </script>
 </body>
 </html>
