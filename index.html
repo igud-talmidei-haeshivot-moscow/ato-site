@@ -464,17 +464,21 @@
         const csvText = await res.text();
         const rows = parseCSV(csvText);
 
+        const normalizeRubric = (str) => {
+          const clean = (str || "").replace(/\s+/g, " ").trim();
+          return clean ? clean[0].toUpperCase() + clean.slice(1).toLowerCase() : "";
+        };
+
         // Пропускаем строку заголовков (rows[0]) и берём 5 столбцов
         allItems = rows.slice(1)
           .filter(r => r[0])
           .map(r => ({
             title: r[0] || "",
-            rubric: r[1] || "",
+            rubric: normalizeRubric(r[1]),
             author: r[2] || "",
             desc: r[3] || "",
             link: r[4] || ""
           }));
-
         renderFilters(allItems);
         renderCards();
       } catch (err) {
