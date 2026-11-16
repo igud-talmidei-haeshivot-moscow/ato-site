@@ -687,7 +687,7 @@
 
     document.getElementById("searchInput").addEventListener("input", renderContent);
     init();
-    async function loadMoscowZmanim() {
+   async function loadMoscowZmanim() {
       const candleEl = document.getElementById("candleTime");
       const havdalahEl = document.getElementById("havdalahTime");
       const havdalahLabelEl = havdalahEl.previousElementSibling;
@@ -713,7 +713,6 @@
           weekday: "short"
         });
 
-        // Берём ближайший выход (Шаббата или праздника) и все зажигания свечей до него
         const havdalah = data.items.find(item => item.category === "havdalah");
         const candlesList = data.items.filter(item =>
           item.category === "candles" &&
@@ -727,12 +726,10 @@
           getWeekdayEn(havdalah.date) === "Sat";
 
         if (isRegularShabbat) {
-          // Обычная неделя: только чистое время без дней недели
           candleEl.textContent = getTimeMsk(candlesList[0].date);
           havdalahLabelEl.textContent = "Выход Шаббата:";
           havdalahEl.textContent = getTimeMsk(havdalah.date);
         } else {
-          // Праздничная неделя: добавляем дни недели и уточняем подпись
           if (candlesList.length > 0) {
             candleEl.textContent = candlesList
               .map(c => `${getWeekdayRu(c.date)} ${getTimeMsk(c.date)}`)
@@ -749,6 +746,8 @@
         havdalahEl.textContent = "—";
       }
     }
+
+    loadMoscowZmanim();
   </script>
 </body>
 </html>
