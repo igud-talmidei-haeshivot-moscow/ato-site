@@ -338,16 +338,19 @@
 
     .read-btn {
       display: block;
+      width: 100%;
       text-align: center;
       background-color: var(--cream);
       color: var(--navy);
       border: 2px solid var(--navy);
       font-family: 'Oswald', sans-serif;
       font-weight: 700;
+      font-size: 0.95rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       text-decoration: none;
       padding: 0.65rem 1rem;
+      cursor: pointer;
       transition: all 0.15s ease;
     }
 
@@ -355,6 +358,103 @@
       background-color: var(--red);
       border-color: var(--red);
       color: var(--cream);
+    }
+
+    /* Встроенная читалка PDF (модальное окно) */
+    .pdf-modal {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(13, 25, 43, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 1000;
+    }
+
+    .pdf-modal.open {
+      display: flex;
+    }
+
+    .pdf-dialog {
+      background-color: var(--cream);
+      border: 3px solid var(--gold);
+      box-shadow: 8px 8px 0 var(--red);
+      width: 100%;
+      max-width: 1000px;
+      height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .pdf-toolbar {
+      background-color: var(--navy);
+      color: var(--cream);
+      padding: 0.75rem 1.25rem;
+      border-bottom: 3px solid var(--gold);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .pdf-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.15rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pdf-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-shrink: 0;
+    }
+
+    .pdf-action-btn {
+      background-color: var(--gold);
+      color: var(--navy);
+      border: 2px solid var(--cream);
+      font-family: 'Oswald', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      padding: 0.4rem 0.85rem;
+      cursor: pointer;
+    }
+
+    .pdf-action-btn:hover {
+      background-color: var(--cream);
+    }
+
+    .pdf-close-btn {
+      background-color: var(--red);
+      color: #FFFFFF;
+      border: 2px solid var(--cream);
+      font-family: 'Oswald', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      padding: 0.4rem 0.85rem;
+      cursor: pointer;
+    }
+
+    .pdf-close-btn:hover {
+      background-color: #8E1B1B;
+    }
+
+    .pdf-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background-color: #262626;
     }
 
     /* Раздел пожертвований и Топ-10 меценатов */
@@ -637,6 +737,20 @@
     </div>
   </main>
 
+  <!-- Встроенная читалка PDF -->
+  <div class="pdf-modal" id="pdfModal" role="dialog" aria-modal="true" aria-labelledby="pdfModalTitle">
+    <div class="pdf-dialog">
+      <div class="pdf-toolbar">
+        <div class="pdf-title" id="pdfModalTitle">Просмотр документа</div>
+        <div class="pdf-actions">
+          <a href="#" id="pdfDownloadLink" target="_blank" rel="noopener noreferrer" class="pdf-action-btn">Скачать / Открыть в новой вкладке ↗</a>
+          <button type="button" id="pdfCloseBtn" class="pdf-close-btn">Закрыть ✕</button>
+        </div>
+      </div>
+      <iframe id="pdfFrame" class="pdf-frame" src="" title="Встроенный просмотр PDF"></iframe>
+    </div>
+  </div>
+
   <footer>
     <div class="container footer-inner">
       <div>© Сообщество АТО • Томхей Тмимим Москва</div>
@@ -649,30 +763,66 @@
   </footer>
 
   <script>
-    // ================= НАСТРОЙКИ ССЫЛОК =================
-    // 1. CSV-ссылка на лист All_Releases (отдельные статьи)
+    // ================= ЗАФИКСИРОВАННЫЕ ССЫЛКИ =================
     const ARTICLES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=0&single=true&output=csv";
-
-    // 2. CSV-ссылка на лист Ready_Issues (готовые журналы и койвецы)
     const ISSUES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=103090562&single=true&output=csv";
-
-    // 3. CSV-ссылка на лист Patrons (топ-10 меценатов)
     const PATRONS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=654627083&single=true&output=csv";
-
-    // 4. Ссылка для кнопки пожертвования (сбор Т-Банк / СБП или @ATO_Moscow)
     const DONATION_URL = "https://t.me/ATO_Moscow";
-    // ====================================================
+    // ===========================================================
 
     let allArticles = [];
     let allIssues = [];
     let allPatrons = [];
-    let currentMode = "ARTICLES"; // "ARTICLES", "ISSUES" или "DONATE"
+    let currentMode = "ARTICLES";
     let currentRubric = "ALL";
 
     function sanitizeUrl(url) {
       const clean = (url || "").trim();
       return /^https?:\/\//i.test(clean) ? clean : "";
     }
+
+    // Преобразует обычную ссылку Google Диска в режим встроенного предпросмотра (/preview)
+    function getEmbedPdfUrl(url) {
+      const safe = sanitizeUrl(url);
+      if (!safe) return "";
+      const driveMatch = safe.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (driveMatch) {
+        return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+      }
+      return safe;
+    }
+
+    function openPdfReader(title, rawUrl) {
+      const safeUrl = sanitizeUrl(rawUrl);
+      if (!safeUrl) return;
+
+      const modal = document.getElementById("pdfModal");
+      const titleEl = document.getElementById("pdfModalTitle");
+      const frameEl = document.getElementById("pdfFrame");
+      const downloadEl = document.getElementById("pdfDownloadLink");
+
+      titleEl.textContent = title || "Просмотр документа";
+      downloadEl.href = safeUrl;
+      frameEl.src = getEmbedPdfUrl(safeUrl);
+      modal.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closePdfReader() {
+      const modal = document.getElementById("pdfModal");
+      const frameEl = document.getElementById("pdfFrame");
+      modal.classList.remove("open");
+      frameEl.src = "";
+      document.body.style.overflow = "";
+    }
+
+    document.getElementById("pdfCloseBtn").addEventListener("click", closePdfReader);
+    document.getElementById("pdfModal").addEventListener("click", (e) => {
+      if (e.target.id === "pdfModal") closePdfReader();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closePdfReader();
+    });
 
     function parseCSV(text) {
       const rows = [];
@@ -798,13 +948,12 @@
 
       const safeLink = sanitizeUrl(item.link);
       if (safeLink) {
-        const linkEl = document.createElement("a");
-        linkEl.href = safeLink;
-        linkEl.target = "_blank";
-        linkEl.rel = "noopener noreferrer";
-        linkEl.className = "read-btn";
-        linkEl.textContent = isIssue ? "Скачать / Читать выпуск (PDF) →" : "Открыть материал (PDF) →";
-        cardFooter.appendChild(linkEl);
+        const readBtn = document.createElement("button");
+        readBtn.type = "button";
+        readBtn.className = "read-btn";
+        readBtn.textContent = isIssue ? "Читать выпуск на сайте →" : "Читать материал →";
+        readBtn.onclick = () => openPdfReader(item.title, safeLink);
+        cardFooter.appendChild(readBtn);
       } else {
         const stubEl = document.createElement("span");
         stubEl.className = "read-btn";
@@ -822,7 +971,6 @@
       const layout = document.createElement("div");
       layout.className = "donate-layout";
 
-      // Левый блок: призыв и кнопка пожертвования
       const donateBox = document.createElement("section");
       donateBox.className = "donate-box";
       donateBox.innerHTML = `
@@ -844,7 +992,6 @@
       ctaBtn.textContent = "Сделать взнос (Цдака) →";
       donateBox.appendChild(ctaBtn);
 
-      // Правый блок: Топ-10 меценатов
       const patronsBox = document.createElement("section");
       patronsBox.className = "patrons-box";
 
@@ -859,7 +1006,7 @@
         emptyNote.style.padding = "2rem 1.25rem";
         emptyNote.style.textAlign = "center";
         emptyNote.style.color = "#4A4A4A";
-        emptyNote.textContent = "Список меценатов обновляется — добавьте вкладку Patrons в таблицу АТО_Архив_Сайта.";
+        emptyNote.textContent = "Список меценатов обновляется.";
         patronsBox.appendChild(emptyNote);
       } else {
         topTen.forEach((patron, index) => {
@@ -954,50 +1101,47 @@
       const area = document.getElementById("contentArea");
 
       try {
-        if (ARTICLES_CSV_URL && !ARTICLES_CSV_URL.includes("ВСТАВЬТЕ_СЮДА")) {
-          const resArticles = await fetch(ARTICLES_CSV_URL);
-          if (resArticles.ok) {
-            const rows = parseCSV(await resArticles.text());
-            allArticles = rows.slice(1)
-              .filter(r => r[0])
-              .map(r => ({
-                title: r[0] || "",
-                rubric: normalizeLabel(r[1]),
-                author: r[2] || "",
-                desc: r[3] || "",
-                link: r[4] || ""
-              }));
-          }
+        const [resArticles, resIssues, resPatrons] = await Promise.all([
+          fetch(ARTICLES_CSV_URL),
+          fetch(ISSUES_CSV_URL),
+          fetch(PATRONS_CSV_URL)
+        ]);
+
+        if (resArticles.ok) {
+          const rows = parseCSV(await resArticles.text());
+          allArticles = rows.slice(1)
+            .filter(r => r[0])
+            .map(r => ({
+              title: r[0] || "",
+              rubric: normalizeLabel(r[1]),
+              author: r[2] || "",
+              desc: r[3] || "",
+              link: r[4] || ""
+            }));
         }
 
-        if (ISSUES_CSV_URL && !ISSUES_CSV_URL.includes("ВСТАВЬТЕ_СЮДА")) {
-          const resIssues = await fetch(ISSUES_CSV_URL);
-          if (resIssues.ok) {
-            const rows = parseCSV(await resIssues.text());
-            allIssues = rows.slice(1)
-              .filter(r => r[0])
-              .map(r => ({
-                title: r[0] || "",
-                type: normalizeLabel(r[1]),
-                period: r[2] || "",
-                desc: r[3] || "",
-                link: r[4] || ""
-              }));
-          }
+        if (resIssues.ok) {
+          const rows = parseCSV(await resIssues.text());
+          allIssues = rows.slice(1)
+            .filter(r => r[0])
+            .map(r => ({
+              title: r[0] || "",
+              type: normalizeLabel(r[1]),
+              period: r[2] || "",
+              desc: r[3] || "",
+              link: r[4] || ""
+            }));
         }
 
-        if (PATRONS_CSV_URL && !PATRONS_CSV_URL.includes("ВСТАВЬТЕ_СЮДА")) {
-          const resPatrons = await fetch(PATRONS_CSV_URL);
-          if (resPatrons.ok) {
-            const rows = parseCSV(await resPatrons.text());
-            allPatrons = rows.slice(1)
-              .filter(r => r[0])
-              .map(r => ({
-                name: r[0] || "",
-                tier: r[1] || "",
-                dedication: r[2] || ""
-              }));
-          }
+        if (resPatrons.ok) {
+          const rows = parseCSV(await resPatrons.text());
+          allPatrons = rows.slice(1)
+            .filter(r => r[0])
+            .map(r => ({
+              name: r[0] || "",
+              tier: r[1] || "",
+              dedication: r[2] || ""
+            }));
         }
 
         setupFilters(allArticles);
