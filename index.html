@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Сообщество АТО — Архив изданий и поддержка</title>
+  <title>Сообщество АТО — Архив изданий, афиша и поддержка</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -174,7 +174,7 @@
 
     /* Навигация и фильтры */
     .controls {
-      margin: 2rem auto 1.5rem;
+      margin: 2rem auto 1.25rem;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
@@ -222,6 +222,13 @@
       font-weight: 700;
     }
 
+    .filter-btn.news-tab {
+      background-color: var(--navy);
+      color: var(--gold);
+      border-color: var(--navy);
+      font-weight: 700;
+    }
+
     .filter-btn.donate-tab {
       background-color: var(--red);
       color: var(--cream);
@@ -231,6 +238,8 @@
 
     .filter-btn.issues-tab:hover,
     .filter-btn.issues-tab.active,
+    .filter-btn.news-tab:hover,
+    .filter-btn.news-tab.active,
     .filter-btn.donate-tab:hover,
     .filter-btn.donate-tab.active {
       background-color: var(--navy);
@@ -260,6 +269,33 @@
     .search-input:focus {
       outline: none;
       border-color: var(--red);
+    }
+
+    /* Подфильтры для Афиши и новостей */
+    .sub-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .sub-btn {
+      background-color: #FFFDF8;
+      border: 1.5px solid var(--navy);
+      color: var(--navy);
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.35rem 0.8rem;
+      cursor: pointer;
+    }
+
+    .sub-btn.active,
+    .sub-btn:hover {
+      background-color: var(--red);
+      border-color: var(--red);
+      color: #FFFFFF;
     }
 
     main {
@@ -303,9 +339,15 @@
     }
 
     .card:nth-child(3n+2) .card-top,
-    .card.issue-card .card-top {
+    .card.issue-card .card-top,
+    .card.news-afisha .card-top {
       background-color: var(--red);
       color: var(--cream);
+    }
+
+    .card.news-spoiler .card-top {
+      background-color: var(--gold);
+      color: var(--navy);
     }
 
     .card.issue-card {
@@ -330,6 +372,7 @@
       font-size: 0.95rem;
       color: #333;
       margin-bottom: 1rem;
+      white-space: pre-line;
     }
 
     .card-footer {
@@ -704,7 +747,7 @@
         </div>
         <div>
           <h1>Сообщество АТО</h1>
-          <p class="subtitle">Игуд Талмидей а-Ешивот Москва • Архив журналов, койвецов и редакционных статей.</p>
+          <p class="subtitle">Игуд Талмидей а-Ешивот Москва • Архив журналов, койвецов, афиша событий и редакционные статьи.</p>
         </div>
       </div>
 
@@ -724,6 +767,7 @@
       <div class="controls">
         <div class="rubrics" id="rubricFilters">
           <button class="filter-btn issues-tab" data-mode="ISSUES">★ Готовые выпуски (PDF)</button>
+          <button class="filter-btn news-tab" data-mode="NEWS">⚡ Афиша и новости</button>
           <button class="filter-btn donate-tab" data-mode="DONATE">♥ Пожертвования и меценаты</button>
           <div class="divider-v"></div>
           <button class="filter-btn active" data-mode="ARTICLES" data-rubric="ALL">Все статьи</button>
@@ -767,21 +811,23 @@
     const ARTICLES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=0&single=true&output=csv";
     const ISSUES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=103090562&single=true&output=csv";
     const PATRONS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=654627083&single=true&output=csv";
+    const NEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=948146673&single=true&output=csv";
     const DONATION_URL = "https://t.me/ATO_Moscow";
     // ===========================================================
 
     let allArticles = [];
     let allIssues = [];
     let allPatrons = [];
+    let allNews = [];
     let currentMode = "ARTICLES";
     let currentRubric = "ALL";
+    let currentNewsCategory = "ALL";
 
     function sanitizeUrl(url) {
       const clean = (url || "").trim();
       return /^https?:\/\//i.test(clean) ? clean : "";
     }
 
-    // Преобразует обычную ссылку Google Диска в режим встроенного предпросмотра (/preview)
     function getEmbedPdfUrl(url) {
       const safe = sanitizeUrl(url);
       if (!safe) return "";
@@ -874,12 +920,20 @@
     function setupFilters(articles) {
       const container = document.getElementById("rubricFilters");
       const issuesBtn = container.querySelector('[data-mode="ISSUES"]');
+      const newsBtn = container.querySelector('[data-mode="NEWS"]');
       const donateBtn = container.querySelector('[data-mode="DONATE"]');
       const allArticlesBtn = container.querySelector('[data-rubric="ALL"]');
 
       issuesBtn.onclick = () => {
         currentMode = "ISSUES";
         setActiveButton(issuesBtn);
+        renderContent();
+      };
+
+      newsBtn.onclick = () => {
+        currentMode = "NEWS";
+        currentNewsCategory = "ALL";
+        setActiveButton(newsBtn);
         renderContent();
       };
 
@@ -965,6 +1019,104 @@
 
       card.append(topWrapper, cardFooter);
       return card;
+    }
+
+    function renderNewsSection(area, query) {
+      area.innerHTML = "";
+
+      const subBar = document.createElement("div");
+      subBar.className = "sub-filters";
+      const categories = [
+        { id: "ALL", label: "Все публикации" },
+        { id: "Афиша", label: "Афиша событий" },
+        { id: "Спойлер", label: "Спойлеры выпусков" },
+        { id: "Новость ешивы", label: "Новости ешивы" }
+      ];
+
+      categories.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = currentNewsCategory === cat.id ? "sub-btn active" : "sub-btn";
+        btn.textContent = cat.label;
+        btn.onclick = () => {
+          currentNewsCategory = cat.id;
+          renderContent();
+        };
+        subBar.appendChild(btn);
+      });
+
+      area.appendChild(subBar);
+
+      const filteredNews = allNews.filter(item => {
+        const matchCat = currentNewsCategory === "ALL" || item.type.toLowerCase() === currentNewsCategory.toLowerCase();
+        const matchQuery = !query ||
+          item.title.toLowerCase().includes(query) ||
+          item.body.toLowerCase().includes(query) ||
+          item.type.toLowerCase().includes(query);
+        return matchCat && matchQuery;
+      });
+
+      if (filteredNews.length === 0) {
+        const emptyBox = document.createElement("div");
+        emptyBox.className = "status-box";
+        emptyBox.textContent = "В этом разделе пока нет публикаций";
+        area.appendChild(emptyBox);
+        return;
+      }
+
+      const grid = document.createElement("div");
+      grid.className = "grid";
+
+      filteredNews.forEach(item => {
+        const card = document.createElement("article");
+        let typeClass = "card";
+        if (item.type.toLowerCase().includes("афиша")) typeClass += " news-afisha";
+        else if (item.type.toLowerCase().includes("спойлер")) typeClass += " news-spoiler";
+        card.className = typeClass;
+
+        const topWrapper = document.createElement("div");
+
+        const cardTop = document.createElement("div");
+        cardTop.className = "card-top";
+        const leftSpan = document.createElement("span");
+        leftSpan.textContent = item.type || "Новость";
+        const rightSpan = document.createElement("span");
+        rightSpan.textContent = item.date || "";
+        cardTop.append(leftSpan, rightSpan);
+
+        const cardBody = document.createElement("div");
+        cardBody.className = "card-body";
+        const titleEl = document.createElement("h2");
+        titleEl.className = "card-title";
+        titleEl.textContent = item.title;
+        cardBody.appendChild(titleEl);
+
+        if (item.body) {
+          const descEl = document.createElement("p");
+          descEl.className = "card-desc";
+          descEl.textContent = item.body;
+          cardBody.appendChild(descEl);
+        }
+
+        topWrapper.append(cardTop, cardBody);
+
+        const cardFooter = document.createElement("div");
+        cardFooter.className = "card-footer";
+        const safePostUrl = sanitizeUrl(item.link) || "https://t.me/Igud_Talmidei_Haeshivot_5787";
+
+        const tgLink = document.createElement("a");
+        tgLink.href = safePostUrl;
+        tgLink.target = "_blank";
+        tgLink.rel = "noopener noreferrer";
+        tgLink.className = "read-btn";
+        tgLink.textContent = "Открыть пост в Telegram ↗";
+        cardFooter.appendChild(tgLink);
+
+        card.append(topWrapper, cardFooter);
+        grid.appendChild(card);
+      });
+
+      area.appendChild(grid);
     }
 
     function renderDonateSection(area) {
@@ -1054,6 +1206,11 @@
 
       const query = document.getElementById("searchInput").value.toLowerCase().trim();
 
+      if (currentMode === "NEWS") {
+        renderNewsSection(area, query);
+        return;
+      }
+
       if (currentMode === "ISSUES") {
         const filteredIssues = allIssues.filter(item => {
           return !query ||
@@ -1101,10 +1258,11 @@
       const area = document.getElementById("contentArea");
 
       try {
-        const [resArticles, resIssues, resPatrons] = await Promise.all([
+        const [resArticles, resIssues, resPatrons, resNews] = await Promise.all([
           fetch(ARTICLES_CSV_URL),
           fetch(ISSUES_CSV_URL),
-          fetch(PATRONS_CSV_URL)
+          fetch(PATRONS_CSV_URL),
+          fetch(NEWS_CSV_URL)
         ]);
 
         if (resArticles.ok) {
@@ -1141,6 +1299,19 @@
               name: r[0] || "",
               tier: r[1] || "",
               dedication: r[2] || ""
+            }));
+        }
+
+        if (resNews.ok) {
+          const rows = parseCSV(await resNews.text());
+          allNews = rows.slice(1)
+            .filter(r => r[0] || r[1])
+            .map(r => ({
+              type: normalizeLabel(r[0]),
+              title: r[1] || "",
+              date: r[2] || "",
+              body: r[3] || "",
+              link: r[4] || ""
             }));
         }
 
