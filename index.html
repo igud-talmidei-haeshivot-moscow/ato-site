@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Кунтрес Тмимим — Издание сообщества АТО</title>
+  <title>Сообщество АТО — Архив изданий и материалов</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -31,14 +31,11 @@
       border-top: 8px solid var(--red);
     }
 
-
     header {
       background-color: var(--navy);
       color: var(--cream);
       border-bottom: 6px solid var(--gold);
-      padding: 2.5rem 1.5rem;
-      position: relative;
-      overflow: hidden;
+      padding: 2rem 1.5rem;
     }
 
     .container {
@@ -54,23 +51,32 @@
       gap: 1.5rem;
     }
 
-    .badge-ato {
-      display: inline-block;
-      background-color: var(--red);
-      color: var(--cream);
-      font-family: 'Oswald', sans-serif;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 0.25rem 0.75rem;
-      font-size: 0.85rem;
-      margin-bottom: 0.75rem;
-      border: 1px solid var(--gold);
+    .brand-block {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .logo-frame {
+      background-color: #FFFFFF;
+      padding: 0.45rem 0.75rem;
+      border: 2px solid var(--gold);
+      box-shadow: 4px 4px 0 var(--red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-frame img {
+      height: 76px;
+      width: auto;
+      display: block;
     }
 
     h1 {
       font-family: 'Oswald', sans-serif;
-      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-size: clamp(2.1rem, 4.5vw, 3.3rem);
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.03em;
@@ -79,25 +85,32 @@
     }
 
     .subtitle {
-      margin-top: 0.6rem;
-      font-size: 1.05rem;
+      margin-top: 0.45rem;
+      font-size: 1rem;
       color: #D6DEC9;
-      max-width: 580px;
+      max-width: 500px;
+    }
+
+    .tg-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: flex-start;
     }
 
     .tg-btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.5rem;
       background-color: var(--gold);
       color: var(--navy);
       font-family: 'Oswald', sans-serif;
       font-weight: 700;
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       text-decoration: none;
-      padding: 0.85rem 1.5rem;
+      padding: 0.75rem 1.25rem;
       border: 2px solid var(--cream);
       transition: transform 0.15s ease, background-color 0.15s ease;
     }
@@ -108,7 +121,13 @@
       box-shadow: 4px 4px 0 var(--red);
     }
 
-    /* Панель фильтров и поиска */
+    .tg-account {
+      color: var(--cream);
+      font-size: 0.9rem;
+      text-decoration: underline;
+    }
+
+    /* Панель фильтров, готовых выпусков и поиска */
     .controls {
       margin: 2rem auto 1.5rem;
       display: flex;
@@ -123,6 +142,7 @@
     .rubrics {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 0.5rem;
     }
 
@@ -134,7 +154,7 @@
       font-size: 0.95rem;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      padding: 0.4rem 0.9rem;
+      padding: 0.45rem 0.9rem;
       cursor: pointer;
       transition: all 0.15s ease;
     }
@@ -148,6 +168,30 @@
     .filter-btn.active {
       border-color: var(--red);
       box-shadow: 3px 3px 0 var(--red);
+    }
+
+    /* Выделенная плашка для готовых PDF-выпусков */
+    .filter-btn.issues-tab {
+      background-color: var(--gold);
+      color: var(--navy);
+      border-color: var(--navy);
+      font-weight: 700;
+    }
+
+    .filter-btn.issues-tab:hover,
+    .filter-btn.issues-tab.active {
+      background-color: var(--red);
+      color: var(--cream);
+      border-color: var(--navy);
+      box-shadow: 3px 3px 0 var(--navy);
+    }
+
+    .divider-v {
+      width: 2px;
+      height: 26px;
+      background-color: var(--navy);
+      margin: 0 0.25rem;
+      opacity: 0.35;
     }
 
     .search-input {
@@ -165,7 +209,6 @@
       border-color: var(--red);
     }
 
-    /* Сетка материалов */
     main {
       padding: 0 1.5rem 4rem;
     }
@@ -205,9 +248,15 @@
       border-bottom: 2px solid var(--navy);
     }
 
-    .card:nth-child(3n+2) .card-top {
+    .card:nth-child(3n+2) .card-top,
+    .card.issue-card .card-top {
       background-color: var(--red);
       color: var(--cream);
+    }
+
+    .card.issue-card {
+      border-width: 2px;
+      box-shadow: 6px 6px 0 var(--gold);
     }
 
     .card-body {
@@ -290,39 +339,47 @@
 
   <header>
     <div class="container header-grid">
-      <div>
-        <div class="badge-ato">Сообщество АТО</div>
-        <h1>Кунтрес Тмимим</h1>
-        <p class="subtitle">Цифровой архив выпусков, тематических буклетов и редакционных материалов сообщества.</p>
+      <div class="brand-block">
+        <div class="logo-frame">
+          <img src="logo.png" alt="Игуд Талмидей а-Ешивот — Сообщество АТО">
+        </div>
+        <div>
+          <h1>Сообщество АТО</h1>
+          <p class="subtitle">Игуд Талмидей а-Ешивот Москва • Архив журналов, койвецов и редакционных статей.</p>
+        </div>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start;">
-        <a href="https://t.me/Igud_Talmidei_Haeshivot_5787" target="_blank" rel="noopener" class="tg-btn" style="font-size: 0.95rem;">
+
+      <div class="tg-links">
+        <a href="https://t.me/Igud_Talmidei_Haeshivot_5787" target="_blank" rel="noopener" class="tg-btn">
           Канал @Igud_Talmidei_Haeshivot_5787 →
         </a>
-        <a href="https://t.me/ATO_Moscow" target="_blank" rel="noopener" style="color: var(--cream); font-size: 0.9rem; text-decoration: underline;">
+        <a href="https://t.me/ATO_Moscow" target="_blank" rel="noopener" class="tg-account">
           Аккаунт в Telegram: @ATO_Moscow
         </a>
       </div>
+    </div>
   </header>
 
   <main>
     <div class="container">
       <div class="controls">
         <div class="rubrics" id="rubricFilters">
-          <button class="filter-btn active" data-rubric="ALL">Все материалы</button>
+          <button class="filter-btn issues-tab" data-mode="ISSUES">★ Готовые выпуски (PDF)</button>
+          <div class="divider-v"></div>
+          <button class="filter-btn active" data-mode="ARTICLES" data-rubric="ALL">Все статьи</button>
         </div>
-        <input type="search" id="searchInput" class="search-input" placeholder="Поиск по названию или автору...">
+        <input type="search" id="searchInput" class="search-input" placeholder="Поиск по названию, главе или автору...">
       </div>
 
       <div id="contentArea">
-        <div class="status-box">Загрузка архива выпусков...</div>
+        <div class="status-box">Загрузка архива...</div>
       </div>
     </div>
   </main>
 
- <footer>
+  <footer>
     <div class="container footer-inner">
-      <div>© Сообщество АТО • Редакция «Кунтрес Тмимим»</div>
+      <div>© Сообщество АТО • Томхей Тмимим Москва</div>
       <div>
         Новостной канал: <a href="https://t.me/Igud_Talmidei_Haeshivot_5787" target="_blank" rel="noopener">@Igud_Talmidei_Haeshivot_5787</a>
         &nbsp;•&nbsp;
@@ -332,13 +389,17 @@
   </footer>
 
   <script>
-    // ВСТАВЬТЕ СЮДА ССЫЛКУ ИЗ «ФАЙЛ -> ПОДЕЛИТЬСЯ -> ОПУБЛИКОВАТЬ В ИНТЕРНЕТЕ (CSV)»
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=0&single=true&output=csv";
+    // 1. СЮДА ВСТАВЬТЕ ВАШУ ПРЕЖНЮЮ CSV-ССЫЛКУ НА ЛИСТ All_Releases (СТАТЬИ)
+    const ARTICLES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=0&single=true&output=csv";
 
-    let allItems = [];
+    // 2. СЮДА ВСТАВЬТЕ CSV-ССЫЛКУ НА НОВЫЙ ЛИСТ Ready_Issues (ГОТОВЫЕ ЖУРНАЛЫ И КОЙВЕЦЫ)
+    const ISSUES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=103090562&single=true&output=csv";
+
+    let allArticles = [];
+    let allIssues = [];
+    let currentMode = "ARTICLES"; // "ARTICLES" или "ISSUES"
     let currentRubric = "ALL";
 
-    // Корректный парсер CSV (не ломается от запятых внутри текста)
     function parseCSV(text) {
       const rows = [];
       let row = [];
@@ -374,37 +435,110 @@
       return rows;
     }
 
-    function renderFilters(items) {
-      const container = document.getElementById("rubricFilters");
-      const rubrics = [...new Set(items.map(item => item.rubric).filter(Boolean))];
+    const normalizeLabel = (str) => {
+      const clean = (str || "").replace(/\s+/g, " ").trim();
+      return clean ? clean[0].toUpperCase() + clean.slice(1).toLowerCase() : "";
+    };
 
+    function setActiveButton(targetBtn) {
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      targetBtn.classList.add("active");
+    }
+
+    function setupFilters(articles) {
+      const container = document.getElementById("rubricFilters");
+      const issuesBtn = container.querySelector('[data-mode="ISSUES"]');
+      const allArticlesBtn = container.querySelector('[data-rubric="ALL"]');
+
+      issuesBtn.onclick = () => {
+        setActiveButton(issuesBtn);
+        currentMode = "ISSUES";
+        renderContent();
+      };
+
+      allArticlesBtn.onclick = () => {
+        setActiveButton(allArticlesBtn);
+        currentMode = "ARTICLES";
+        currentRubric = "ALL";
+        renderContent();
+      };
+
+      const rubrics = [...new Set(articles.map(item => item.rubric).filter(Boolean))];
       rubrics.forEach(rubric => {
         const btn = document.createElement("button");
         btn.className = "filter-btn";
+        btn.dataset.mode = "ARTICLES";
         btn.dataset.rubric = rubric;
         btn.textContent = rubric;
         btn.onclick = () => {
-          document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
+          setActiveButton(btn);
+          currentMode = "ARTICLES";
           currentRubric = rubric;
-          renderCards();
+          renderContent();
         };
         container.appendChild(btn);
       });
-
-      container.querySelector('[data-rubric="ALL"]').onclick = (e) => {
-        document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-        e.target.classList.add("active");
-        currentRubric = "ALL";
-        renderCards();
-      };
     }
 
-    function renderCards() {
+    function renderContent() {
       const area = document.getElementById("contentArea");
       const query = document.getElementById("searchInput").value.toLowerCase().trim();
 
-      const filtered = allItems.filter(item => {
+      if (currentMode === "ISSUES") {
+        if (!ISSUES_CSV_URL || ISSUES_CSV_URL.includes("ВСТАВЬТЕ_СЮДА")) {
+          area.innerHTML = '<div class="status-box">Чтобы здесь появились журналы и койвецы, создайте вкладку Ready_Issues в таблице и вставьте её CSV-ссылку в переменную ISSUES_CSV_URL</div>';
+          return;
+        }
+
+        const filteredIssues = allIssues.filter(item => {
+          return !query ||
+            item.title.toLowerCase().includes(query) ||
+            item.type.toLowerCase().includes(query) ||
+            item.period.toLowerCase().includes(query) ||
+            item.desc.toLowerCase().includes(query);
+        });
+
+        if (filteredIssues.length === 0) {
+          area.innerHTML = '<div class="status-box">Готовые выпуски по вашему запросу не найдены</div>';
+          return;
+        }
+
+        const grid = document.createElement("div");
+        grid.className = "grid";
+
+        filteredIssues.forEach(item => {
+          const card = document.createElement("article");
+          card.className = "card issue-card";
+
+          const btnHtml = item.link
+            ? `<a href="${item.link}" target="_blank" rel="noopener" class="read-btn">Скачать / Читать выпуск (PDF) →</a>`
+            : `<span class="read-btn" style="opacity:0.5; cursor:default;">PDF готовится</span>`;
+
+          card.innerHTML = `
+            <div>
+              <div class="card-top">
+                <span>${item.type || "Выпуск"}</span>
+                <span>${item.period || ""}</span>
+              </div>
+              <div class="card-body">
+                <h2 class="card-title">${item.title}</h2>
+                ${item.desc ? `<p class="card-desc">${item.desc}</p>` : ""}
+              </div>
+            </div>
+            <div class="card-footer">
+              ${btnHtml}
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+        area.innerHTML = "";
+        area.appendChild(grid);
+        return;
+      }
+
+      // Режим отображения отдельных статей
+      const filtered = allArticles.filter(item => {
         const matchRubric = currentRubric === "ALL" || item.rubric === currentRubric;
         const matchQuery = !query ||
           item.title.toLowerCase().includes(query) ||
@@ -432,7 +566,7 @@
         card.innerHTML = `
           <div>
             <div class="card-top">
-              <span>${item.rubric || "Выпуск"}</span>
+              <span>${item.rubric || "Статья"}</span>
               <span>${item.author || ""}</span>
             </div>
             <div class="card-body">
@@ -453,40 +587,48 @@
 
     async function init() {
       const area = document.getElementById("contentArea");
-      if (!CSV_URL || CSV_URL.includes("ВСТАВЬТЕ_СЮДА")) {
-        area.innerHTML = '<div class="status-box">Вставьте ссылку на CSV-таблицу в переменную CSV_URL внутри index.html</div>';
-        return;
-      }
 
       try {
-        const res = await fetch(CSV_URL);
-        if (!res.ok) throw new Error("Ошибка загрузки таблицы");
-        const csvText = await res.text();
-        const rows = parseCSV(csvText);
+        if (ARTICLES_CSV_URL && !ARTICLES_CSV_URL.includes("ВСТАВЬТЕ_СЮДА")) {
+          const resArticles = await fetch(ARTICLES_CSV_URL);
+          if (resArticles.ok) {
+            const rows = parseCSV(await resArticles.text());
+            allArticles = rows.slice(1)
+              .filter(r => r[0])
+              .map(r => ({
+                title: r[0] || "",
+                rubric: normalizeLabel(r[1]),
+                author: r[2] || "",
+                desc: r[3] || "",
+                link: r[4] || ""
+              }));
+          }
+        }
 
-        const normalizeRubric = (str) => {
-          const clean = (str || "").replace(/\s+/g, " ").trim();
-          return clean ? clean[0].toUpperCase() + clean.slice(1).toLowerCase() : "";
-        };
+        if (ISSUES_CSV_URL && !ISSUES_CSV_URL.includes("ВСТАВЬТЕ_СЮДА")) {
+          const resIssues = await fetch(ISSUES_CSV_URL);
+          if (resIssues.ok) {
+            const rows = parseCSV(await resIssues.text());
+            allIssues = rows.slice(1)
+              .filter(r => r[0])
+              .map(r => ({
+                title: r[0] || "",
+                type: normalizeLabel(r[1]),
+                period: r[2] || "",
+                desc: r[3] || "",
+                link: r[4] || ""
+              }));
+          }
+        }
 
-        // Пропускаем строку заголовков (rows[0]) и берём 5 столбцов
-        allItems = rows.slice(1)
-          .filter(r => r[0])
-          .map(r => ({
-            title: r[0] || "",
-            rubric: normalizeRubric(r[1]),
-            author: r[2] || "",
-            desc: r[3] || "",
-            link: r[4] || ""
-          }));
-        renderFilters(allItems);
-        renderCards();
+        setupFilters(allArticles);
+        renderContent();
       } catch (err) {
-        area.innerHTML = '<div class="status-box">Не удалось загрузить данные. Проверьте, что лист All_Releases опубликован в интернет.</div>';
+        area.innerHTML = '<div class="status-box">Не удалось загрузить данные. Проверьте публикацию листов в интернет.</div>';
       }
     }
 
-    document.getElementById("searchInput").addEventListener("input", renderCards);
+    document.getElementById("searchInput").addEventListener("input", renderContent);
     init();
   </script>
 </body>
