@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Сообщество АТО — Архив изданий и материалов</title>
+  <title>Сообщество АТО — Архив изданий и поддержка</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -31,16 +31,61 @@
       border-top: 8px solid var(--red);
     }
 
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    /* Верхняя плашка зманим (Москва) */
+    .zmanim-bar {
+      background-color: #0D192B;
+      color: var(--cream);
+      border-bottom: 2px solid var(--gold);
+      padding: 0.55rem 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    .zmanim-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem 1.5rem;
+    }
+
+    .zmanim-city {
+      font-family: 'Oswald', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .zmanim-times {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.75rem;
+    }
+
+    .zmanim-item span {
+      color: #D6DEC9;
+    }
+
+    .zmanim-item strong {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      color: #FFFFFF;
+      margin-left: 0.35rem;
+    }
+
+    /* Шапка сайта */
     header {
       background-color: var(--navy);
       color: var(--cream);
       border-bottom: 6px solid var(--gold);
       padding: 2rem 1.5rem;
-    }
-
-    .container {
-      max-width: 1120px;
-      margin: 0 auto;
     }
 
     .header-grid {
@@ -127,7 +172,7 @@
       text-decoration: underline;
     }
 
-    /* Панель фильтров, готовых выпусков и поиска */
+    /* Навигация и фильтры */
     .controls {
       margin: 2rem auto 1.5rem;
       display: flex;
@@ -170,7 +215,6 @@
       box-shadow: 3px 3px 0 var(--red);
     }
 
-    /* Выделенная плашка для готовых PDF-выпусков */
     .filter-btn.issues-tab {
       background-color: var(--gold);
       color: var(--navy);
@@ -178,12 +222,21 @@
       font-weight: 700;
     }
 
-    .filter-btn.issues-tab:hover,
-    .filter-btn.issues-tab.active {
+    .filter-btn.donate-tab {
       background-color: var(--red);
       color: var(--cream);
       border-color: var(--navy);
-      box-shadow: 3px 3px 0 var(--navy);
+      font-weight: 700;
+    }
+
+    .filter-btn.issues-tab:hover,
+    .filter-btn.issues-tab.active,
+    .filter-btn.donate-tab:hover,
+    .filter-btn.donate-tab.active {
+      background-color: var(--navy);
+      color: var(--gold);
+      border-color: var(--red);
+      box-shadow: 3px 3px 0 var(--red);
     }
 
     .divider-v {
@@ -213,6 +266,7 @@
       padding: 0 1.5rem 4rem;
     }
 
+    /* Сетка карточек */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -255,7 +309,6 @@
     }
 
     .card.issue-card {
-      border-width: 2px;
       box-shadow: 6px 6px 0 var(--gold);
     }
 
@@ -304,6 +357,196 @@
       color: var(--cream);
     }
 
+    /* Раздел пожертвований и Топ-10 меценатов */
+    .donate-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 860px) {
+      .donate-layout {
+        grid-template-columns: 1fr 1.35fr;
+        align-items: start;
+      }
+    }
+
+    .donate-box {
+      background-color: var(--navy);
+      color: var(--cream);
+      border: 2px solid var(--navy);
+      box-shadow: 6px 6px 0 var(--red);
+      padding: 1.75rem;
+    }
+
+    .donate-badge {
+      display: inline-block;
+      background-color: var(--gold);
+      color: var(--navy);
+      font-family: 'Oswald', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.2rem 0.65rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .donate-box h2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.85rem;
+      text-transform: uppercase;
+      line-height: 1.15;
+      margin-bottom: 0.9rem;
+      color: #FFFFFF;
+    }
+
+    .donate-box p {
+      color: #D6DEC9;
+      font-size: 0.98rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .donate-list {
+      list-style: none;
+      margin-bottom: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.18);
+      padding-top: 0.9rem;
+    }
+
+    .donate-list li {
+      position: relative;
+      padding-left: 1.2rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.93rem;
+      color: var(--cream);
+    }
+
+    .donate-list li::before {
+      content: "▪";
+      position: absolute;
+      left: 0;
+      color: var(--gold);
+    }
+
+    .donate-cta {
+      display: block;
+      text-align: center;
+      background-color: var(--red);
+      color: #FFFFFF;
+      border: 2px solid var(--gold);
+      font-family: 'Oswald', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      padding: 0.9rem 1.25rem;
+      transition: all 0.15s ease;
+    }
+
+    .donate-cta:hover {
+      background-color: var(--gold);
+      color: var(--navy);
+      border-color: #FFFFFF;
+    }
+
+    .patrons-box {
+      background-color: #FFFDF8;
+      border: 2px solid var(--navy);
+      box-shadow: 6px 6px 0 var(--gold);
+    }
+
+    .patrons-header {
+      background-color: var(--navy);
+      color: var(--cream);
+      padding: 1rem 1.5rem;
+      border-bottom: 4px solid var(--red);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .patrons-header h2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .patrons-header span {
+      font-family: 'Oswald', sans-serif;
+      color: var(--gold);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .patron-row {
+      display: grid;
+      grid-template-columns: 52px 1fr auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.95rem 1.25rem;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+
+    .patron-row:last-child {
+      border-bottom: none;
+    }
+
+    .patron-rank {
+      font-family: 'Oswald', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      text-align: center;
+      padding: 0.35rem 0;
+      border: 2px solid var(--navy);
+      background-color: var(--cream);
+      color: var(--navy);
+    }
+
+    .patron-row.top-3 .patron-rank {
+      background-color: var(--gold);
+      border-color: var(--navy);
+      color: var(--navy);
+      box-shadow: 2px 2px 0 var(--red);
+    }
+
+    .patron-row:first-child .patron-rank {
+      background-color: var(--red);
+      color: #FFFFFF;
+      border-color: var(--navy);
+    }
+
+    .patron-name {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      color: var(--navy);
+      line-height: 1.2;
+    }
+
+    .patron-dedication {
+      font-size: 0.88rem;
+      color: #4A4A4A;
+      margin-top: 0.2rem;
+    }
+
+    .patron-tier {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background-color: var(--cream);
+      border: 1px solid var(--navy);
+      color: var(--navy);
+      padding: 0.25rem 0.6rem;
+      white-space: nowrap;
+    }
+
     .status-box {
       text-align: center;
       padding: 3rem 1rem;
@@ -333,53 +576,11 @@
       color: var(--gold);
       text-decoration: none;
     }
-    /* Верхняя плашка зманим (Москва) */
-    .zmanim-bar {
-      background-color: #0D192B;
-      color: var(--cream);
-      border-bottom: 2px solid var(--gold);
-      padding: 0.55rem 1.5rem;
-      font-size: 0.9rem;
-    }
-
-    .zmanim-inner {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.75rem 1.5rem;
-    }
-
-    .zmanim-city {
-      font-family: 'Oswald', sans-serif;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--gold);
-      font-weight: 700;
-      font-size: 0.85rem;
-    }
-
-    .zmanim-times {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem 1.75rem;
-    }
-
-    .zmanim-item span {
-      color: #D6DEC9;
-    }
-
-    .zmanim-item strong {
-      font-family: 'Oswald', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.04em;
-      color: #FFFFFF;
-      margin-left: 0.35rem;
-    }
   </style>
 </head>
 <body>
-<div class="zmanim-bar">
+
+  <div class="zmanim-bar">
     <div class="container zmanim-inner">
       <div class="zmanim-city">▪ Зманим • Москва</div>
       <div class="zmanim-times">
@@ -394,6 +595,7 @@
       </div>
     </div>
   </div>
+
   <header>
     <div class="container header-grid">
       <div class="brand-block">
@@ -422,6 +624,7 @@
       <div class="controls">
         <div class="rubrics" id="rubricFilters">
           <button class="filter-btn issues-tab" data-mode="ISSUES">★ Готовые выпуски (PDF)</button>
+          <button class="filter-btn donate-tab" data-mode="DONATE">♥ Пожертвования и меценаты</button>
           <div class="divider-v"></div>
           <button class="filter-btn active" data-mode="ARTICLES" data-rubric="ALL">Все статьи</button>
         </div>
@@ -446,16 +649,30 @@
   </footer>
 
   <script>
-    // 1. СЮДА ВСТАВЬТЕ ВАШУ ПРЕЖНЮЮ CSV-ССЫЛКУ НА ЛИСТ All_Releases (СТАТЬИ)
+    // ================= НАСТРОЙКИ ССЫЛОК =================
+    // 1. CSV-ссылка на лист All_Releases (отдельные статьи)
     const ARTICLES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=0&single=true&output=csv";
 
-    // 2. СЮДА ВСТАВЬТЕ CSV-ССЫЛКУ НА НОВЫЙ ЛИСТ Ready_Issues (ГОТОВЫЕ ЖУРНАЛЫ И КОЙВЕЦЫ)
+    // 2. CSV-ссылка на лист Ready_Issues (готовые журналы и койвецы)
     const ISSUES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=103090562&single=true&output=csv";
+
+    // 3. CSV-ссылка на лист Patrons (топ-10 меценатов)
+    const PATRONS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=654627083&single=true&output=csv";
+
+    // 4. Ссылка для кнопки пожертвования (сбор Т-Банк / СБП или @ATO_Moscow)
+    const DONATION_URL = "https://t.me/ATO_Moscow";
+    // ====================================================
 
     let allArticles = [];
     let allIssues = [];
-    let currentMode = "ARTICLES"; // "ARTICLES" или "ISSUES"
+    let allPatrons = [];
+    let currentMode = "ARTICLES"; // "ARTICLES", "ISSUES" или "DONATE"
     let currentRubric = "ALL";
+
+    function sanitizeUrl(url) {
+      const clean = (url || "").trim();
+      return /^https?:\/\//i.test(clean) ? clean : "";
+    }
 
     function parseCSV(text) {
       const rows = [];
@@ -500,23 +717,32 @@
     function setActiveButton(targetBtn) {
       document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
       targetBtn.classList.add("active");
+      const searchEl = document.getElementById("searchInput");
+      searchEl.style.display = currentMode === "DONATE" ? "none" : "block";
     }
 
     function setupFilters(articles) {
       const container = document.getElementById("rubricFilters");
       const issuesBtn = container.querySelector('[data-mode="ISSUES"]');
+      const donateBtn = container.querySelector('[data-mode="DONATE"]');
       const allArticlesBtn = container.querySelector('[data-rubric="ALL"]');
 
       issuesBtn.onclick = () => {
-        setActiveButton(issuesBtn);
         currentMode = "ISSUES";
+        setActiveButton(issuesBtn);
+        renderContent();
+      };
+
+      donateBtn.onclick = () => {
+        currentMode = "DONATE";
+        setActiveButton(donateBtn);
         renderContent();
       };
 
       allArticlesBtn.onclick = () => {
-        setActiveButton(allArticlesBtn);
         currentMode = "ARTICLES";
         currentRubric = "ALL";
+        setActiveButton(allArticlesBtn);
         renderContent();
       };
 
@@ -528,25 +754,160 @@
         btn.dataset.rubric = rubric;
         btn.textContent = rubric;
         btn.onclick = () => {
-          setActiveButton(btn);
           currentMode = "ARTICLES";
           currentRubric = rubric;
+          setActiveButton(btn);
           renderContent();
         };
         container.appendChild(btn);
       });
     }
 
+    function buildCardElement(item, isIssue) {
+      const card = document.createElement("article");
+      card.className = isIssue ? "card issue-card" : "card";
+
+      const topWrapper = document.createElement("div");
+
+      const cardTop = document.createElement("div");
+      cardTop.className = "card-top";
+      const leftSpan = document.createElement("span");
+      leftSpan.textContent = isIssue ? (item.type || "Выпуск") : (item.rubric || "Статья");
+      const rightSpan = document.createElement("span");
+      rightSpan.textContent = isIssue ? (item.period || "") : (item.author || "");
+      cardTop.append(leftSpan, rightSpan);
+
+      const cardBody = document.createElement("div");
+      cardBody.className = "card-body";
+      const titleEl = document.createElement("h2");
+      titleEl.className = "card-title";
+      titleEl.textContent = item.title;
+      cardBody.appendChild(titleEl);
+
+      if (item.desc) {
+        const descEl = document.createElement("p");
+        descEl.className = "card-desc";
+        descEl.textContent = item.desc;
+        cardBody.appendChild(descEl);
+      }
+
+      topWrapper.append(cardTop, cardBody);
+
+      const cardFooter = document.createElement("div");
+      cardFooter.className = "card-footer";
+
+      const safeLink = sanitizeUrl(item.link);
+      if (safeLink) {
+        const linkEl = document.createElement("a");
+        linkEl.href = safeLink;
+        linkEl.target = "_blank";
+        linkEl.rel = "noopener noreferrer";
+        linkEl.className = "read-btn";
+        linkEl.textContent = isIssue ? "Скачать / Читать выпуск (PDF) →" : "Открыть материал (PDF) →";
+        cardFooter.appendChild(linkEl);
+      } else {
+        const stubEl = document.createElement("span");
+        stubEl.className = "read-btn";
+        stubEl.style.opacity = "0.5";
+        stubEl.style.cursor = "default";
+        stubEl.textContent = "Файл готовится";
+        cardFooter.appendChild(stubEl);
+      }
+
+      card.append(topWrapper, cardFooter);
+      return card;
+    }
+
+    function renderDonateSection(area) {
+      const layout = document.createElement("div");
+      layout.className = "donate-layout";
+
+      // Левый блок: призыв и кнопка пожертвования
+      const donateBox = document.createElement("section");
+      donateBox.className = "donate-box";
+      donateBox.innerHTML = `
+        <div class="donate-badge">Партнёрство в Торе • Цдака</div>
+        <h2>Поддержать проекты сообщества АТО</h2>
+        <p>Каждый выпуск «Кунтрес Тмимим», издание койвецов и программы для учеников ешивы становятся возможными благодаря вашей поддержке.</p>
+        <ul class="donate-list">
+          <li>Печать новых тиражей журнала и тематических буклетов</li>
+          <li>Проведение фарбренгенов, шаббатонов и выездов сообщества</li>
+          <li>Поддержка редакционной и просветительской работы</li>
+        </ul>
+      `;
+
+      const ctaBtn = document.createElement("a");
+      ctaBtn.href = sanitizeUrl(DONATION_URL) || "https://t.me/ATO_Moscow";
+      ctaBtn.target = "_blank";
+      ctaBtn.rel = "noopener noreferrer";
+      ctaBtn.className = "donate-cta";
+      ctaBtn.textContent = "Сделать взнос (Цдака) →";
+      donateBox.appendChild(ctaBtn);
+
+      // Правый блок: Топ-10 меценатов
+      const patronsBox = document.createElement("section");
+      patronsBox.className = "patrons-box";
+
+      const patronsHeader = document.createElement("div");
+      patronsHeader.className = "patrons-header";
+      patronsHeader.innerHTML = `<h2>Топ-10 меценатов АТО</h2><span>Благодарность редакции</span>`;
+      patronsBox.appendChild(patronsHeader);
+
+      const topTen = allPatrons.slice(0, 10);
+      if (topTen.length === 0) {
+        const emptyNote = document.createElement("div");
+        emptyNote.style.padding = "2rem 1.25rem";
+        emptyNote.style.textAlign = "center";
+        emptyNote.style.color = "#4A4A4A";
+        emptyNote.textContent = "Список меценатов обновляется — добавьте вкладку Patrons в таблицу АТО_Архив_Сайта.";
+        patronsBox.appendChild(emptyNote);
+      } else {
+        topTen.forEach((patron, index) => {
+          const row = document.createElement("div");
+          row.className = index < 3 ? "patron-row top-3" : "patron-row";
+
+          const rankEl = document.createElement("div");
+          rankEl.className = "patron-rank";
+          rankEl.textContent = String(index + 1).padStart(2, "0");
+
+          const infoEl = document.createElement("div");
+          const nameEl = document.createElement("div");
+          nameEl.className = "patron-name";
+          nameEl.textContent = patron.name;
+          infoEl.appendChild(nameEl);
+
+          if (patron.dedication) {
+            const dedEl = document.createElement("div");
+            dedEl.className = "patron-dedication";
+            dedEl.textContent = patron.dedication;
+            infoEl.appendChild(dedEl);
+          }
+
+          const tierEl = document.createElement("div");
+          tierEl.className = "patron-tier";
+          tierEl.textContent = patron.tier || "Меценат АТО";
+
+          row.append(rankEl, infoEl, tierEl);
+          patronsBox.appendChild(row);
+        });
+      }
+
+      layout.append(donateBox, patronsBox);
+      area.innerHTML = "";
+      area.appendChild(layout);
+    }
+
     function renderContent() {
       const area = document.getElementById("contentArea");
+
+      if (currentMode === "DONATE") {
+        renderDonateSection(area);
+        return;
+      }
+
       const query = document.getElementById("searchInput").value.toLowerCase().trim();
 
       if (currentMode === "ISSUES") {
-        if (!ISSUES_CSV_URL || ISSUES_CSV_URL.includes("ВСТАВЬТЕ_СЮДА")) {
-          area.innerHTML = '<div class="status-box">Чтобы здесь появились журналы и койвецы, создайте вкладку Ready_Issues в таблице и вставьте её CSV-ссылку в переменную ISSUES_CSV_URL</div>';
-          return;
-        }
-
         const filteredIssues = allIssues.filter(item => {
           return !query ||
             item.title.toLowerCase().includes(query) ||
@@ -562,39 +923,12 @@
 
         const grid = document.createElement("div");
         grid.className = "grid";
-
-        filteredIssues.forEach(item => {
-          const card = document.createElement("article");
-          card.className = "card issue-card";
-
-          const btnHtml = item.link
-            ? `<a href="${item.link}" target="_blank" rel="noopener" class="read-btn">Скачать / Читать выпуск (PDF) →</a>`
-            : `<span class="read-btn" style="opacity:0.5; cursor:default;">PDF готовится</span>`;
-
-          card.innerHTML = `
-            <div>
-              <div class="card-top">
-                <span>${item.type || "Выпуск"}</span>
-                <span>${item.period || ""}</span>
-              </div>
-              <div class="card-body">
-                <h2 class="card-title">${item.title}</h2>
-                ${item.desc ? `<p class="card-desc">${item.desc}</p>` : ""}
-              </div>
-            </div>
-            <div class="card-footer">
-              ${btnHtml}
-            </div>
-          `;
-          grid.appendChild(card);
-        });
-
+        filteredIssues.forEach(item => grid.appendChild(buildCardElement(item, true)));
         area.innerHTML = "";
         area.appendChild(grid);
         return;
       }
 
-      // Режим отображения отдельных статей
       const filtered = allArticles.filter(item => {
         const matchRubric = currentRubric === "ALL" || item.rubric === currentRubric;
         const matchQuery = !query ||
@@ -611,33 +945,7 @@
 
       const grid = document.createElement("div");
       grid.className = "grid";
-
-      filtered.forEach(item => {
-        const card = document.createElement("article");
-        card.className = "card";
-
-        const btnHtml = item.link
-          ? `<a href="${item.link}" target="_blank" rel="noopener" class="read-btn">Открыть материал (PDF) →</a>`
-          : `<span class="read-btn" style="opacity:0.5; cursor:default;">Файл готовится</span>`;
-
-        card.innerHTML = `
-          <div>
-            <div class="card-top">
-              <span>${item.rubric || "Статья"}</span>
-              <span>${item.author || ""}</span>
-            </div>
-            <div class="card-body">
-              <h2 class="card-title">${item.title}</h2>
-              ${item.desc ? `<p class="card-desc">${item.desc}</p>` : ""}
-            </div>
-          </div>
-          <div class="card-footer">
-            ${btnHtml}
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-
+      filtered.forEach(item => grid.appendChild(buildCardElement(item, false)));
       area.innerHTML = "";
       area.appendChild(grid);
     }
@@ -678,6 +986,20 @@
           }
         }
 
+        if (PATRONS_CSV_URL && !PATRONS_CSV_URL.includes("ВСТАВЬТЕ_СЮДА")) {
+          const resPatrons = await fetch(PATRONS_CSV_URL);
+          if (resPatrons.ok) {
+            const rows = parseCSV(await resPatrons.text());
+            allPatrons = rows.slice(1)
+              .filter(r => r[0])
+              .map(r => ({
+                name: r[0] || "",
+                tier: r[1] || "",
+                dedication: r[2] || ""
+              }));
+          }
+        }
+
         setupFilters(allArticles);
         renderContent();
       } catch (err) {
@@ -685,9 +1007,7 @@
       }
     }
 
-    document.getElementById("searchInput").addEventListener("input", renderContent);
-    init();
-   async function loadMoscowZmanim() {
+    async function loadMoscowZmanim() {
       const candleEl = document.getElementById("candleTime");
       const havdalahEl = document.getElementById("havdalahTime");
       const havdalahLabelEl = havdalahEl.previousElementSibling;
@@ -747,6 +1067,8 @@
       }
     }
 
+    document.getElementById("searchInput").addEventListener("input", renderContent);
+    init();
     loadMoscowZmanim();
   </script>
 </body>
