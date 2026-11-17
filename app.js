@@ -731,15 +731,10 @@ if (scrollTopBtn) {
 
   const overlay = document.createElement("div");
   overlay.className = "easter-overlay";
-  overlay.innerHTML = `
+ overlay.innerHTML = `
     <div class="easter-card">
-      <div class="easter-diamonds">
-        <span class="diamond"></span>
-        <span>ח״י • תשפ״ז</span>
-        <span class="diamond"></span>
-      </div>
       <div class="easter-text">יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד</div>
-      <button type="button" class="easter-close">אמן • Закрыть</button>
+      <button type="button" class="easter-close">אמן</button>
     </div>
   `;
   document.body.appendChild(overlay);
