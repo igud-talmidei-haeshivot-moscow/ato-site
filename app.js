@@ -407,11 +407,10 @@ function renderDonateSection(area) {
   donateBox.className = "donate-box";
   donateBox.innerHTML = `
     <h2>Поддержать проекты сообщества АТО</h2>
-    <p>Каждый выпуск «Кунтрес Тмимим», издание койвецов и программы для учеников ешивы становятся возможными благодаря вашей поддержке.</p>
+    <p>Каждый выпуск «Кунтрес Тмимим», издание койвецов и проекты для учеников ешивы становятся возможными благодаря вашей поддержке.</p>
     <ul class="donate-list">
-      <li>Печать новых тиражей журнала и тематических буклетов</li>
-      <li>Проведение фарбренгенов, шаббатонов и выездов сообщества</li>
-      <li>Поддержка редакционной и просветительской работы</li>
+      <li>Печать новых тиражей журнала и койвецов</li>
+      <li>Поддержка команды АТО</li>
     </ul>
   `;
 
@@ -420,7 +419,7 @@ function renderDonateSection(area) {
   ctaBtn.target = "_blank";
   ctaBtn.rel = "noopener noreferrer";
   ctaBtn.className = "donate-cta";
-  ctaBtn.textContent = "Сделать взнос (Цдака) →";
+  ctaBtn.textContent = "Поддержать АТО →";
   donateBox.appendChild(ctaBtn);
 
   const patronsBox = document.createElement("section");
