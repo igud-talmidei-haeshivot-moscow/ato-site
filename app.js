@@ -722,3 +722,45 @@ if (scrollTopBtn) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 }
+// Пасхалка: 18 кликов по логотипу в шапке
+(function initLogoEasterEgg() {
+  const logoFrame = document.querySelector(".logo-frame");
+  if (!logoFrame) return;
+
+  let clickCount = 0;
+  let resetTimer = null;
+
+  const overlay = document.createElement("div");
+  overlay.className = "easter-overlay";
+  overlay.innerHTML = `
+    <div class="easter-card">
+      <div class="easter-diamonds">
+        <span class="diamond"></span>
+        <span>ח״י • תשפ״ז</span>
+        <span class="diamond"></span>
+      </div>
+      <div class="easter-text">יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד</div>
+      <button type="button" class="easter-close">אמן • Закрыть</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const closeOverlay = () => overlay.classList.remove("active");
+  overlay.querySelector(".easter-close").addEventListener("click", closeOverlay);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
+
+  logoFrame.addEventListener("click", () => {
+    clickCount++;
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => {
+      clickCount = 0;
+    }, 3500);
+
+    if (clickCount === 18) {
+      clickCount = 0;
+      overlay.classList.add("active");
+    }
+  });
+})();
