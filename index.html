@@ -264,53 +264,60 @@
       margin-top: 0.45rem;
       font-size: 0.98rem;
       color: var(--text-muted);
-      max-width: 520px;
+      max-width: 500px;
     }
 
+    /* Единый блок кнопок Telegram в шапке */
     .tg-links {
       display: flex;
       flex-direction: column;
-      gap: 0.55rem;
-      align-items: flex-start;
+      gap: 0.6rem;
+      min-width: 295px;
     }
 
     .tg-btn {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 0.55rem;
-      background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-mid) 100%);
-      color: #FFFFFF;
+      justify-content: space-between;
+      gap: 0.75rem;
       font-family: 'Oswald', sans-serif;
       font-weight: 600;
-      font-size: 0.95rem;
+      font-size: 0.93rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       text-decoration: none;
-      padding: 0.8rem 1.35rem;
+      padding: 0.72rem 1.25rem;
       border-radius: 10px;
-      border: 1px solid rgba(10, 116, 218, 0.4);
-      box-shadow: 0 8px 20px -6px rgba(7, 22, 43, 0.35);
-      transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
     }
 
-    .tg-btn:hover {
+    .tg-btn.primary {
+      background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-mid) 100%);
+      color: #FFFFFF;
+      border: 1.5px solid var(--navy-deep);
+      box-shadow: 0 8px 20px -6px rgba(7, 22, 43, 0.35);
+    }
+
+    .tg-btn.primary:hover {
       background: linear-gradient(135deg, var(--blue-accent) 0%, var(--navy-mid) 100%);
+      border-color: var(--blue-accent);
       transform: translateY(-2px);
       box-shadow: 0 12px 24px -6px rgba(10, 116, 218, 0.45);
     }
 
-    .tg-account {
-      color: var(--blue-accent);
-      font-size: 0.9rem;
-      font-weight: 500;
-      text-decoration: none;
-      border-bottom: 1px dashed rgba(10, 116, 218, 0.5);
-      transition: color 0.2s ease, border-color 0.2s ease;
+    .tg-btn.secondary {
+      background-color: #FFFFFF;
+      color: var(--navy-deep);
+      border: 1.5px solid var(--border-subtle);
+      box-shadow: 0 4px 12px -4px rgba(7, 22, 43, 0.08);
     }
 
-    .tg-account:hover {
-      color: var(--navy-deep);
-      border-color: var(--navy-deep);
+    .tg-btn.secondary:hover {
+      background-color: var(--bg-tint);
+      border-color: var(--blue-accent);
+      color: var(--blue-accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px -6px rgba(10, 116, 218, 0.22);
     }
 
     /* Навигация и фильтры */
@@ -711,21 +718,6 @@
       padding: 1.85rem;
     }
 
-    .donate-badge {
-      display: inline-block;
-      background-color: rgba(10, 116, 218, 0.25);
-      border: 1px solid #64B5F6;
-      color: #90CAF9;
-      font-family: 'Oswald', sans-serif;
-      font-weight: 600;
-      font-size: 0.82rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 0.25rem 0.7rem;
-      border-radius: 999px;
-      margin-bottom: 0.95rem;
-    }
-
     .donate-box h2 {
       font-family: 'Oswald', sans-serif;
       font-size: 1.85rem;
@@ -979,11 +971,13 @@
       </div>
 
       <div class="tg-links">
-        <a href="https://t.me/Igud_Talmidei_Haeshivot_5787" target="_blank" rel="noopener" class="tg-btn">
-          Канал @Igud_Talmidei_Haeshivot_5787 →
+        <a href="https://t.me/Igud_Talmidei_Haeshivot_5787" target="_blank" rel="noopener" class="tg-btn primary">
+          <span>Канал @Igud_Talmidei_Haeshivot_5787</span>
+          <span>→</span>
         </a>
-        <a href="https://t.me/ATO_Moscow" target="_blank" rel="noopener" class="tg-account">
-          Аккаунт в Telegram: @ATO_Moscow
+        <a href="https://t.me/ATO_Moscow" target="_blank" rel="noopener" class="tg-btn secondary">
+          <span>Аккаунт редакции @ATO_Moscow</span>
+          <span>→</span>
         </a>
       </div>
     </div>
@@ -1374,7 +1368,6 @@
       const donateBox = document.createElement("section");
       donateBox.className = "donate-box";
       donateBox.innerHTML = `
-        <div class="donate-badge">Партнёрство в Торе • Цдака</div>
         <h2>Поддержать проекты сообщества АТО</h2>
         <p>Каждый выпуск «Кунтрес Тмимим», издание койвецов и программы для учеников ешивы становятся возможными благодаря вашей поддержке.</p>
         <ul class="donate-list">
