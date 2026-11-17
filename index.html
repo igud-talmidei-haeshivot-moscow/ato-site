@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Сообщество АТО — Архив изданий, афиша и поддержка</title>
+  <link rel="icon" type="image/png" href="logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -352,6 +353,15 @@
 
     .card.issue-card {
       box-shadow: 6px 6px 0 var(--gold);
+    }
+
+    .card-photo {
+      width: 100%;
+      max-height: 240px;
+      object-fit: cover;
+      display: block;
+      border-bottom: 2px solid var(--navy);
+      background-color: var(--cream-dark);
     }
 
     .card-body {
@@ -1083,6 +1093,18 @@
         const rightSpan = document.createElement("span");
         rightSpan.textContent = item.date || "";
         cardTop.append(leftSpan, rightSpan);
+        topWrapper.appendChild(cardTop);
+
+        const safePhotoUrl = sanitizeUrl(item.photo);
+        if (safePhotoUrl) {
+          const imgEl = document.createElement("img");
+          imgEl.src = safePhotoUrl;
+          imgEl.alt = item.title || "Иллюстрация публикации";
+          imgEl.className = "card-photo";
+          imgEl.loading = "lazy";
+          imgEl.onerror = () => { imgEl.style.display = "none"; };
+          topWrapper.appendChild(imgEl);
+        }
 
         const cardBody = document.createElement("div");
         cardBody.className = "card-body";
@@ -1098,7 +1120,7 @@
           cardBody.appendChild(descEl);
         }
 
-        topWrapper.append(cardTop, cardBody);
+        topWrapper.appendChild(cardBody);
 
         const cardFooter = document.createElement("div");
         cardFooter.className = "card-footer";
@@ -1311,7 +1333,8 @@
               title: r[1] || "",
               date: r[2] || "",
               body: r[3] || "",
-              link: r[4] || ""
+              link: r[4] || "",
+              photo: r[5] || ""
             }));
         }
 
