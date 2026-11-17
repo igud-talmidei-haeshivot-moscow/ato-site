@@ -29,9 +29,13 @@ function getEmbedPdfUrl(url) {
   return safe;
 }
 
-function openPdfReader(title, rawUrl) {
+function openPdfReader(title, rawUrl, hashSlug) {
   const safeUrl = sanitizeUrl(rawUrl);
   if (!safeUrl) return;
+
+  if (hashSlug) {
+    history.replaceState(null, "", `#${hashSlug}`);
+  }
 
   if (typeof ym === "function") {
     ym(114297805, "reachGoal", "open_pdf", { doc_title: title || "Документ" });
@@ -41,10 +45,13 @@ function openPdfReader(title, rawUrl) {
   const titleEl = document.getElementById("pdfModalTitle");
   const frameEl = document.getElementById("pdfFrame");
   const downloadEl = document.getElementById("pdfDownloadLink");
+  const copyBtn = document.getElementById("pdfCopyLinkBtn");
 
   titleEl.textContent = title || "Просмотр документа";
   downloadEl.href = safeUrl;
   frameEl.src = getEmbedPdfUrl(safeUrl);
+  if (copyBtn) copyBtn.textContent = "Скопировать ссылку";
+
   modal.classList.add("open");
   document.body.style.overflow = "hidden";
 }
@@ -55,6 +62,43 @@ function closePdfReader() {
   modal.classList.remove("open");
   frameEl.src = "";
   document.body.style.overflow = "";
+
+  if (window.location.hash) {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
+}
+
+function handleHashNavigation() {
+  const hash = window.location.hash.replace(/^#/, "").trim();
+  if (!hash) return;
+
+  const issueMatch = hash.match(/^issue-(\d+)$/i);
+  if (issueMatch) {
+    const idx = parseInt(issueMatch[1], 10) - 1;
+    const item = allIssues[idx];
+    if (item && sanitizeUrl(item.link)) {
+      currentMode = "ISSUES";
+      const issuesBtn = document.querySelector('[data-mode="ISSUES"]');
+      if (issuesBtn) setActiveButton(issuesBtn);
+      renderContent();
+      openPdfReader(item.title, item.link, `issue-${idx + 1}`);
+    }
+    return;
+  }
+
+  const articleMatch = hash.match(/^article-(\d+)$/i);
+  if (articleMatch) {
+    const idx = parseInt(articleMatch[1], 10) - 1;
+    const item = allArticles[idx];
+    if (item && sanitizeUrl(item.link)) {
+      currentMode = "ARTICLES";
+      currentRubric = "ALL";
+      const allBtn = document.querySelector('[data-rubric="ALL"]');
+      if (allBtn) setActiveButton(allBtn);
+      renderContent();
+      openPdfReader(item.title, item.link, `article-${idx + 1}`);
+    }
+  }
 }
 
 document.getElementById("pdfCloseBtn").addEventListener("click", closePdfReader);
@@ -64,6 +108,22 @@ document.getElementById("pdfModal").addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closePdfReader();
 });
+window.addEventListener("hashchange", handleHashNavigation);
+
+const copyLinkBtn = document.getElementById("pdfCopyLinkBtn");
+if (copyLinkBtn) {
+  copyLinkBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      copyLinkBtn.textContent = "Ссылка скопирована ✓";
+      setTimeout(() => {
+        copyLinkBtn.textContent = "Скопировать ссылку";
+      }, 2200);
+    } catch (err) {
+      prompt("Скопируйте прямую ссылку на документ:", window.location.href);
+    }
+  });
+}
 
 function parseCSV(text) {
   const rows = [];
@@ -169,10 +229,10 @@ function setupFilters(articles) {
   });
 }
 
-function buildCardElement(item, isIssue, index) {
+function buildCardElement(item, isIssue, animIndex) {
   const card = document.createElement("article");
   card.className = isIssue ? "card issue-card" : "card";
-  card.style.animationDelay = `${Math.min(index * 55, 450)}ms`;
+  card.style.animationDelay = `${Math.min(animIndex * 55, 450)}ms`;
 
   const topWrapper = document.createElement("div");
 
@@ -209,7 +269,8 @@ function buildCardElement(item, isIssue, index) {
     readBtn.type = "button";
     readBtn.className = "read-btn";
     readBtn.textContent = isIssue ? "Читать выпуск на сайте →" : "Читать материал →";
-    readBtn.onclick = () => openPdfReader(item.title, safeLink);
+    const slug = isIssue ? `issue-${item.id}` : `article-${item.id}`;
+    readBtn.onclick = () => openPdfReader(item.title, safeLink, slug);
     cardFooter.appendChild(readBtn);
   } else {
     const stubEl = document.createElement("span");
@@ -527,7 +588,8 @@ async function init() {
       const rows = parseCSV(await resArticles.text());
       allArticles = rows.slice(1)
         .filter(r => r[0])
-        .map(r => ({
+        .map((r, i) => ({
+          id: i + 1,
           title: r[0] || "",
           rubric: normalizeLabel(r[1]),
           author: r[2] || "",
@@ -540,7 +602,8 @@ async function init() {
       const rows = parseCSV(await resIssues.text());
       allIssues = rows.slice(1)
         .filter(r => r[0])
-        .map(r => ({
+        .map((r, i) => ({
+          id: i + 1,
           title: r[0] || "",
           type: normalizeLabel(r[1]),
           period: r[2] || "",
@@ -576,6 +639,7 @@ async function init() {
 
     setupFilters(allArticles);
     renderContent();
+    handleHashNavigation();
   } catch (err) {
     area.innerHTML = '<div class="status-box">Не удалось загрузить данные. Проверьте публикацию листов в интернет.</div>';
   }
