@@ -525,15 +525,18 @@ function buildQuotesPool(manualQuotes, articles) {
     }));
 }
 
-function renderDailyQuote(forceIndex) {
+function renderDailyQuote(excludeCurrent = false) {
   const slot = document.getElementById("dailyQuoteSlot");
   if (!slot || allQuotes.length === 0) return;
 
-  if (typeof forceIndex === "number") {
-    currentQuoteIndex = (forceIndex + allQuotes.length) % allQuotes.length;
+  if (allQuotes.length === 1) {
+    currentQuoteIndex = 0;
   } else {
-    const daySeed = Math.floor(Date.now() / 86400000);
-    currentQuoteIndex = daySeed % allQuotes.length;
+    let nextIndex = Math.floor(Math.random() * allQuotes.length);
+    if (excludeCurrent && nextIndex === currentQuoteIndex) {
+      nextIndex = (nextIndex + 1) % allQuotes.length;
+    }
+    currentQuoteIndex = nextIndex;
   }
 
   const item = allQuotes[currentQuoteIndex];
@@ -590,7 +593,7 @@ function renderDailyQuote(forceIndex) {
     nextBtn.type = "button";
     nextBtn.className = "quote-btn";
     nextBtn.textContent = "Другая мысль ↻";
-    nextBtn.onclick = () => renderDailyQuote(currentQuoteIndex + 1);
+    nextBtn.onclick = () => renderDailyQuote(true);
     actionsEl.appendChild(nextBtn);
   }
 }
