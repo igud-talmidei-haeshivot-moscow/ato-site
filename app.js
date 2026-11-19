@@ -19,6 +19,7 @@ let currentNewsCategory = "ALL";
 
 function sanitizeUrl(url) {
   const clean = (url || "").trim();
+  if (/^audio\/[a-zA-Z0-9._-]+$/i.test(clean)) return clean;
   return /^https?:\/\//i.test(clean) ? clean : "";
 }
 
@@ -305,53 +306,102 @@ function renderDailyQuote(excludeCurrent = false) {
     actionsEl.appendChild(nextBtn);
   }
 }
+
+// ================= КАСТОМНЫЙ АУДИОПЛЕЕР НИГУНОВ =================
+const nigunAudio = new Audio();
+
+function formatAudioTime(sec) {
+  if (!isFinite(sec) || sec < 0) return "0:00";
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function resolveAudioSrc(rawUrl) {
+  const safe = sanitizeUrl(rawUrl);
+  if (!safe) return "";
+  const driveMatch = safe.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch) {
+    return `audio/${driveMatch[1]}.mp3`;
+  }
+  return safe;
+}
+
 function openNigunPlayer(title, rawAudioUrl) {
-  const safeUrl = sanitizeUrl(rawAudioUrl);
-  if (!safeUrl) return;
+  const src = resolveAudioSrc(rawAudioUrl);
+  if (!src) return;
 
   const bar = document.getElementById("nigunPlayerBar");
   const titleEl = document.getElementById("nigunPlayerTitle");
-  const mediaEl = document.getElementById("nigunPlayerMedia");
-  if (!bar || !mediaEl) return;
+  const playBtn = document.getElementById("nigunPlayPauseBtn");
+  const progressEl = document.getElementById("nigunProgress");
+  const timeEl = document.getElementById("nigunTimeLabel");
 
   titleEl.textContent = title || "Нигун месяца";
-  mediaEl.innerHTML = "";
+  progressEl.value = 0;
+  timeEl.textContent = "Загрузка...";
+  playBtn.textContent = "❚❚";
 
-  const driveMatch = safeUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-  const ytMatch = safeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-
-  if (ytMatch) {
-    const iframe = document.createElement("iframe");
-    iframe.src = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1`;
-    iframe.allow = "autoplay; encrypted-media";
-    mediaEl.appendChild(iframe);
-  } else if (driveMatch) {
-    const iframe = document.createElement("iframe");
-    iframe.src = `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
-    iframe.allow = "autoplay";
-    mediaEl.appendChild(iframe);
-  } else {
-    const audio = document.createElement("audio");
-    audio.controls = true;
-    audio.autoplay = true;
-    audio.src = safeUrl;
-    mediaEl.appendChild(audio);
-  }
+  nigunAudio.src = src;
+  nigunAudio.play().catch(() => {
+    playBtn.textContent = "▶";
+  });
 
   bar.classList.add("open");
 }
 
 function closeNigunPlayer() {
+  nigunAudio.pause();
+  nigunAudio.src = "";
   const bar = document.getElementById("nigunPlayerBar");
-  const mediaEl = document.getElementById("nigunPlayerMedia");
   if (bar) bar.classList.remove("open");
-  if (mediaEl) mediaEl.innerHTML = "";
+}
+
+const playPauseBtn = document.getElementById("nigunPlayPauseBtn");
+const progressSlider = document.getElementById("nigunProgress");
+const timeLabel = document.getElementById("nigunTimeLabel");
+
+if (playPauseBtn) {
+  playPauseBtn.addEventListener("click", () => {
+    if (nigunAudio.paused) {
+      nigunAudio.play();
+      playPauseBtn.textContent = "❚❚";
+    } else {
+      nigunAudio.pause();
+      playPauseBtn.textContent = "▶";
+    }
+  });
+}
+
+nigunAudio.addEventListener("timeupdate", () => {
+  if (!isFinite(nigunAudio.duration)) return;
+  progressSlider.value = (nigunAudio.currentTime / nigunAudio.duration) * 100;
+  timeLabel.textContent = `${formatAudioTime(nigunAudio.currentTime)} / ${formatAudioTime(nigunAudio.duration)}`;
+});
+
+nigunAudio.addEventListener("loadedmetadata", () => {
+  timeLabel.textContent = `0:00 / ${formatAudioTime(nigunAudio.duration)}`;
+});
+
+nigunAudio.addEventListener("ended", () => {
+  playPauseBtn.textContent = "▶";
+  progressSlider.value = 0;
+});
+
+if (progressSlider) {
+  progressSlider.addEventListener("input", () => {
+    if (isFinite(nigunAudio.duration)) {
+      nigunAudio.currentTime = (progressSlider.value / 100) * nigunAudio.duration;
+    }
+  });
 }
 
 const nigunCloseBtn = document.getElementById("nigunPlayerClose");
 if (nigunCloseBtn) {
   nigunCloseBtn.addEventListener("click", closeNigunPlayer);
 }
+// ================================================================
+
 function buildCardElement(item, isIssue, animIndex) {
   const card = document.createElement("article");
   card.className = isIssue ? "card issue-card" : "card";
@@ -383,7 +433,7 @@ function buildCardElement(item, isIssue, animIndex) {
 
   topWrapper.append(cardTop, cardBody);
 
-const cardFooter = document.createElement("div");
+  const cardFooter = document.createElement("div");
   cardFooter.className = "card-footer";
 
   const actionsRow = document.createElement("div");
@@ -720,7 +770,7 @@ async function init() {
       fetch(NEWS_CSV_URL)
     ]);
 
-if (resArticles.ok) {
+    if (resArticles.ok) {
       const rows = parseCSV(await resArticles.text());
       allArticles = rows.slice(1)
         .filter(r => r[0])
