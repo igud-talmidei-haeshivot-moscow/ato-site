@@ -1,1 +1,118 @@
+name: Import All Chabad.org Nigunim
 
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-nigunim:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Scrape and download Chabad Melodies
+        run: |
+          python3 - << 'EOF'
+          import csv, html, os, re, time, urllib.parse, urllib.request
+
+          BASE_URL = "https://www.chabad.org"
+          INDEX_URL = "https://www.chabad.org/multimedia/music_cdo/aid/140602/jewish/Chabad-Melodies.htm"
+          HEADERS = {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+          }
+
+          def fetch(url):
+              req = urllib.request.Request(url, headers=HEADERS)
+              with urllib.request.urlopen(req, timeout=25) as resp:
+                  return resp.read().decode("utf-8", errors="ignore")
+
+          os.makedirs("audio/chabad", exist_ok=True)
+          index_html = fetch(INDEX_URL)
+
+          # Находим все ссылки на тома (Volume 1 ... Volume 16)
+          vol_matches = re.findall(
+              r'href="(/multimedia/music_cdo/aid/\d+/jewish/Volume-(\d+)[^"]*)"',
+              index_html,
+              flags=re.IGNORECASE
+          )
+
+          volumes = {}
+          for path, num in vol_matches:
+              volumes[int(num)] = urllib.parse.urljoin(BASE_URL, path)
+
+          print(f"Found {len(volumes)} volumes: {sorted(volumes.keys())}")
+
+          rows = [["Название", "Категория", "Аудио", "Статья"]]
+          seen_aids = set()
+
+          for vol_num in sorted(volumes.keys()):
+              vol_url = volumes[vol_num]
+              print(f"Scanning Volume {vol_num}: {vol_url}")
+              vol_html = fetch(vol_url)
+
+              # Находим все треки внутри тома
+              track_links = re.findall(
+                  r'href="(/multimedia/music_cdo/aid/(\d+)/jewish/[^"]+)"',
+                  vol_html
+              )
+
+              for t_path, aid in track_links:
+                  if aid in seen_aids or f"Volume-{vol_num}" in t_path:
+                      continue
+                  seen_aids.add(aid)
+
+                  t_url = urllib.parse.urljoin(BASE_URL, t_path)
+                  try:
+                      t_html = fetch(t_url)
+                  except Exception as e:
+                      print(f"Skip {t_url}: {e}")
+                      continue
+
+                  # Ищем прямую ссылку на mp3 в коде страницы/плеера
+                  mp3_match = re.search(r'(https?://[^"\'\s<>]+\.mp3(?:\?[^"\'\s<>]*)?)', t_html)
+                  if not mp3_match:
+                      continue
+
+                  mp3_url = html.unescape(mp3_match.group(1))
+
+                  # Вытаскиваем название нигуна из заголовка <h1> или <title>
+                  h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', t_html, flags=re.S)
+                  if h1_match:
+                      title = re.sub(r'<[^>]+>', '', h1_match.group(1)).strip()
+                  else:
+                      title = t_path.split("/")[-1].replace(".htm", "").replace("-", " ")
+                  title = html.unescape(re.sub(r'\s+', ' ', title))
+
+                  local_path = f"audio/chabad/vol{vol_num}_{aid}.mp3"
+                  if not os.path.exists(local_path):
+                      try:
+                          req_mp3 = urllib.request.Request(mp3_url, headers=HEADERS)
+                          with urllib.request.urlopen(req_mp3, timeout=40) as r_mp3, open(local_path, "wb") as f_out:
+                              f_out.write(r_mp3.read())
+                          print(f"Downloaded: {title} -> {local_path}")
+                      except Exception as e:
+                          print(f"Failed MP3 {mp3_url}: {e}")
+                          continue
+
+                  rows.append([title, f"Том {vol_num}", local_path, ""])
+                  time.sleep(0.35)
+
+          with open("nigunim_import.csv", "w", newline="", encoding="utf-8-sig") as f_csv:
+              writer = csv.writer(f_csv)
+              writer.writerows(rows)
+
+          print(f"Done! Total tracks exported: {len(rows) - 1}")
+          EOF
+
+      - name: Commit imported audio and CSV
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add audio/chabad/ nigunim_import.csv
+          if ! git diff --cached --quiet; then
+            git commit -m "Bulk import Chabad.org nigunim archive"
+            git push
+          fi
