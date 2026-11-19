@@ -1,4 +1,23 @@
-- name: Download new MP3 files from Google Drive
+name: Sync Nigun Audio from Google Sheets
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/sync-audio.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download new MP3 files from Google Drive
         run: |
           python3 - << 'EOF'
           import csv, io, os, re, urllib.request
@@ -23,3 +42,11 @@
                           print(f"Downloading {file_id}.mp3...")
                           urllib.request.urlretrieve(dl_url, dest)
           EOF
+
+      - name: Commit and push downloaded audio
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add audio
+          git diff --staged --quiet || git commit -m "Auto-sync nigun audio from Google Sheets"
+          git push
