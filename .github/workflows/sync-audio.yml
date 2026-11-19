@@ -1,51 +1,25 @@
-name: Sync Nigun Audio from Google Sheets
-
-on:
-  schedule:
-    - cron: '0 * * * *'
-  workflow_dispatch:
-
-permissions:
-  contents: write
-
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download new MP3 files from Google Drive
+- name: Download new MP3 files from Google Drive
         run: |
           python3 - << 'EOF'
           import csv, io, os, re, urllib.request
 
-          CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=0&single=true&output=csv"
+          CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouU1H-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=1555876785&single=true&output=csv"
           os.makedirs("audio", exist_ok=True)
 
           req = urllib.request.urlopen(CSV_URL)
           text = req.read().decode("utf-8")
           rows = list(csv.reader(io.StringIO(text)))
 
+          print(f"Total rows fetched: {len(rows)}")
           for r in rows[1:]:
-              if len(r) > 5 and r[5]:
-                  url = r[5].strip()
-                  m = re.search(r"drive\.google\.com/file/d/([a-zA-Z0-9_-]+)", url)
+              if len(r) > 2 and r[2]:
+                  url = r[2].strip()
+                  m = re.search(r"(?:drive\.google\.com/file/d/|[?&]id=)([a-zA-Z0-9_-]+)", url)
                   if m:
                       file_id = m.group(1)
                       dest = f"audio/{file_id}.mp3"
                       if not os.path.exists(dest):
-                          dl_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+                          dl_url = f"https://drive.google.com/uc?export=download&confirm=t&id={file_id}"
                           print(f"Downloading {file_id}.mp3...")
                           urllib.request.urlretrieve(dl_url, dest)
           EOF
-
-      - name: Commit and push downloaded audio
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add audio/
-          if ! git diff --cached --quiet; then
-            git commit -m "Auto-sync nigun audio from Google Sheets"
-            git push
-          fi
