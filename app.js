@@ -305,7 +305,53 @@ function renderDailyQuote(excludeCurrent = false) {
     actionsEl.appendChild(nextBtn);
   }
 }
+function openNigunPlayer(title, rawAudioUrl) {
+  const safeUrl = sanitizeUrl(rawAudioUrl);
+  if (!safeUrl) return;
 
+  const bar = document.getElementById("nigunPlayerBar");
+  const titleEl = document.getElementById("nigunPlayerTitle");
+  const mediaEl = document.getElementById("nigunPlayerMedia");
+  if (!bar || !mediaEl) return;
+
+  titleEl.textContent = title || "Нигун месяца";
+  mediaEl.innerHTML = "";
+
+  const driveMatch = safeUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  const ytMatch = safeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+
+  if (ytMatch) {
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1`;
+    iframe.allow = "autoplay; encrypted-media";
+    mediaEl.appendChild(iframe);
+  } else if (driveMatch) {
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+    iframe.allow = "autoplay";
+    mediaEl.appendChild(iframe);
+  } else {
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.autoplay = true;
+    audio.src = safeUrl;
+    mediaEl.appendChild(audio);
+  }
+
+  bar.classList.add("open");
+}
+
+function closeNigunPlayer() {
+  const bar = document.getElementById("nigunPlayerBar");
+  const mediaEl = document.getElementById("nigunPlayerMedia");
+  if (bar) bar.classList.remove("open");
+  if (mediaEl) mediaEl.innerHTML = "";
+}
+
+const nigunCloseBtn = document.getElementById("nigunPlayerClose");
+if (nigunCloseBtn) {
+  nigunCloseBtn.addEventListener("click", closeNigunPlayer);
+}
 function buildCardElement(item, isIssue, animIndex) {
   const card = document.createElement("article");
   card.className = isIssue ? "card issue-card" : "card";
@@ -337,8 +383,11 @@ function buildCardElement(item, isIssue, animIndex) {
 
   topWrapper.append(cardTop, cardBody);
 
-  const cardFooter = document.createElement("div");
+const cardFooter = document.createElement("div");
   cardFooter.className = "card-footer";
+
+  const actionsRow = document.createElement("div");
+  actionsRow.className = "card-footer-actions";
 
   const safeLink = sanitizeUrl(item.link);
   if (safeLink) {
@@ -348,16 +397,27 @@ function buildCardElement(item, isIssue, animIndex) {
     readBtn.textContent = isIssue ? "Читать выпуск на сайте →" : "Читать материал →";
     const slug = isIssue ? `issue-${item.id}` : `article-${item.id}`;
     readBtn.onclick = () => openPdfReader(item.title, safeLink, slug);
-    cardFooter.appendChild(readBtn);
+    actionsRow.appendChild(readBtn);
   } else {
     const stubEl = document.createElement("span");
     stubEl.className = "read-btn";
     stubEl.style.opacity = "0.5";
     stubEl.style.cursor = "default";
     stubEl.textContent = "Файл готовится";
-    cardFooter.appendChild(stubEl);
+    actionsRow.appendChild(stubEl);
   }
 
+  const safeAudio = !isIssue ? sanitizeUrl(item.audio) : "";
+  if (safeAudio) {
+    const listenBtn = document.createElement("button");
+    listenBtn.type = "button";
+    listenBtn.className = "listen-btn";
+    listenBtn.textContent = "♪ Слушать нигун";
+    listenBtn.onclick = () => openNigunPlayer(item.title, safeAudio);
+    actionsRow.appendChild(listenBtn);
+  }
+
+  cardFooter.appendChild(actionsRow);
   card.append(topWrapper, cardFooter);
   return card;
 }
@@ -660,7 +720,7 @@ async function init() {
       fetch(NEWS_CSV_URL)
     ]);
 
-    if (resArticles.ok) {
+if (resArticles.ok) {
       const rows = parseCSV(await resArticles.text());
       allArticles = rows.slice(1)
         .filter(r => r[0])
@@ -670,7 +730,8 @@ async function init() {
           rubric: normalizeLabel(r[1]),
           author: r[2] || "",
           desc: r[3] || "",
-          link: r[4] || ""
+          link: r[4] || "",
+          audio: r[5] || ""
         }));
     }
 
