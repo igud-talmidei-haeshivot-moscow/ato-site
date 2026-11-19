@@ -4,6 +4,9 @@ const ISSUES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFg
 const PATRONS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=654627083&single=true&output=csv";
 const NEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=948146673&single=true&output=csv";
 const DONATION_URL = "https://t.me/ATO_Moscow";
+const QUOTES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=1487106234&single=true&output=csv";
+let allQuotes = [];
+let currentQuoteIndex = 0;
 // ===========================================================
 
 let allArticles = [];
@@ -508,7 +511,89 @@ function renderAboutSection(area) {
     </div>
   `;
 }
+function buildQuotesPool(manualQuotes, articles) {
+  if (manualQuotes.length > 0) return manualQuotes;
 
+  return articles
+    .filter(a => a.rubric.toLowerCase() === "суть томима" && a.desc)
+    .map(a => ({
+      text: a.desc,
+      source: a.author ? `«${a.title}» • ${a.author}` : `«${a.title}»`,
+      title: a.title,
+      link: a.link,
+      articleId: a.id
+    }));
+}
+
+function renderDailyQuote(forceIndex) {
+  const slot = document.getElementById("dailyQuoteSlot");
+  if (!slot || allQuotes.length === 0) return;
+
+  if (typeof forceIndex === "number") {
+    currentQuoteIndex = (forceIndex + allQuotes.length) % allQuotes.length;
+  } else {
+    const daySeed = Math.floor(Date.now() / 86400000);
+    currentQuoteIndex = daySeed % allQuotes.length;
+  }
+
+  const item = allQuotes[currentQuoteIndex];
+  const shareUrl = item.articleId
+    ? `${window.location.origin}${window.location.pathname}#article-${item.articleId}`
+    : `${window.location.origin}${window.location.pathname}`;
+
+  slot.innerHTML = `
+    <section class="daily-quote-box" aria-label="Быть Томимом каждый день">
+      <div class="daily-quote-top">
+        <div class="daily-quote-label">
+          <span class="diamond"></span>
+          <span>Быть Томимом каждый день</span>
+        </div>
+      </div>
+      <blockquote class="daily-quote-text">«${item.text.replace(/^[«"]|[»"]$/g, "")}»</blockquote>
+      <div class="daily-quote-bottom">
+        <div class="daily-quote-source">— ${item.source}</div>
+        <div class="daily-quote-actions" id="dailyQuoteActions"></div>
+      </div>
+    </section>
+  `;
+
+  const actionsEl = document.getElementById("dailyQuoteActions");
+
+  if (sanitizeUrl(item.link)) {
+    const readBtn = document.createElement("button");
+    readBtn.type = "button";
+    readBtn.className = "quote-btn primary";
+    readBtn.textContent = "Читать статью →";
+    const slug = item.articleId ? `article-${item.articleId}` : "";
+    readBtn.onclick = () => openPdfReader(item.title || item.source, item.link, slug);
+    actionsEl.appendChild(readBtn);
+  }
+
+  const shareBtn = document.createElement("button");
+  shareBtn.type = "button";
+  shareBtn.className = "quote-btn";
+  shareBtn.textContent = "Поделиться цитатой";
+  shareBtn.onclick = async () => {
+    const shareText = `«${item.text.replace(/^[«"]|[»"]$/g, "")}»\n\n— ${item.source} (Сообщество АТО • Москва)\nЧитать полностью: ${shareUrl}`;
+    try {
+      await navigator.clipboard.writeText(shareText);
+      shareBtn.textContent = "Цитата скопирована ✓";
+      setTimeout(() => { shareBtn.textContent = "Поделиться цитатой"; }, 2200);
+    } catch (e) {
+      prompt("Скопируйте цитату для отправки:", shareText);
+    }
+  };
+  actionsEl.appendChild(shareBtn);
+
+  if (allQuotes.length > 1) {
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "quote-btn";
+    nextBtn.textContent = "Другая мысль ↻";
+    nextBtn.onclick = () => renderDailyQuote(currentQuoteIndex + 1);
+    actionsEl.appendChild(nextBtn);
+  }
+}
 function renderContent() {
   const area = document.getElementById("contentArea");
 
@@ -635,7 +720,23 @@ async function init() {
           photo: r[5] || ""
         }));
     }
-
+let manualQuotes = [];
+    if (QUOTES_CSV_URL) {
+      const resQuotes = await fetch(QUOTES_CSV_URL);
+      if (resQuotes.ok) {
+        const rows = parseCSV(await resQuotes.text());
+        manualQuotes = rows.slice(1)
+          .filter(r => r[0])
+          .map(r => ({
+            text: r[0] || "",
+            source: r[1] || "Сообщество АТО",
+            title: r[1] || "Статья АТО",
+            link: r[2] || ""
+          }));
+      }
+    }
+    allQuotes = buildQuotesPool(manualQuotes, allArticles);
+    renderDailyQuote();
     setupFilters(allArticles);
     renderContent();
     handleHashNavigation();
