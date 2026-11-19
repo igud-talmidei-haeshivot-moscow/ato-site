@@ -81,33 +81,32 @@
         </div>
       </div>
 
-      <div class="tg-links">
+     <div class="tg-links">
         <a href="https://t.me/Igud_Talmidei_Haeshivot_5787" target="_blank" rel="noopener" class="tg-btn primary">
-          <span>Канал @Igud_Talmidei_Haeshivot_5787</span>
-          <span>→</span>
+          <span>Telegram-канал АТО</span>
+          <span>↗</span>
         </a>
-        <a href="https://t.me/ATO_Moscow" target="_blank" rel="noopener" class="tg-btn secondary">
-          <span>Аккаунт редакции @ATO_Moscow</span>
-          <span>→</span>
+        <a href="https://t.me/ATO_Moscow" target="_blank" rel="noopener" class="tg-sub-link">
+          Связаться с редакцией: @ATO_Moscow
         </a>
       </div>
-    </div>
   </header>
 
   <main>
     <div class="container">
       <div id="dailyQuoteSlot"></div>
       <div class="controls">
-        <div class="rubrics" id="rubricFilters">
-          <button class="filter-btn issues-tab" data-mode="ISSUES">★ Готовые выпуски (PDF)</button>
-          <button class="filter-btn news-tab" data-mode="NEWS">⚡ Афиша и новости</button>
-          <button class="filter-btn donate-tab" data-mode="DONATE">♥ Пожертвования и меценаты</button>
-          <button class="filter-btn about-tab" data-mode="ABOUT">◆ О сообществе</button>
-          <div class="divider-v"></div>
-          <button class="filter-btn active" data-mode="ARTICLES" data-rubric="ALL">Все статьи</button>
-        </div>
+        <nav class="main-tabs" id="mainTabs" aria-label="Разделы сайта">
+          <button type="button" class="filter-btn active" data-mode="ARTICLES">Статьи</button>
+          <button type="button" class="filter-btn" data-mode="ISSUES">Выпуски (PDF)</button>
+          <button type="button" class="filter-btn" data-mode="NEWS">Афиша и новости</button>
+          <button type="button" class="filter-btn" data-mode="DONATE">Пожертвования</button>
+          <button type="button" class="filter-btn" data-mode="ABOUT">О сообществе</button>
+        </nav>
         <input type="search" id="searchInput" class="search-input" placeholder="Поиск по названию, главе или автору...">
       </div>
+
+      <div class="sub-filters" id="rubricSubBar"></div>
 
       <div id="contentArea">
         <div class="status-box">Загрузка архива...</div>
