@@ -3,16 +3,16 @@ const ARTICLES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuP
 const ISSUES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=103090562&single=true&output=csv";
 const PATRONS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=654627083&single=true&output=csv";
 const NEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=948146673&single=true&output=csv";
-const DONATION_URL = "https://t.me/ATO_Moscow";
 const QUOTES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=1487106234&single=true&output=csv";
-let allQuotes = [];
-let currentQuoteIndex = 0;
+const DONATION_URL = "https://t.me/ATO_Moscow";
 // ===========================================================
 
 let allArticles = [];
 let allIssues = [];
 let allPatrons = [];
 let allNews = [];
+let allQuotes = [];
+let currentQuoteIndex = 0;
 let currentMode = "ARTICLES";
 let currentRubric = "ALL";
 let currentNewsCategory = "ALL";
@@ -81,8 +81,9 @@ function handleHashNavigation() {
     const item = allIssues[idx];
     if (item && sanitizeUrl(item.link)) {
       currentMode = "ISSUES";
-      const issuesBtn = document.querySelector('[data-mode="ISSUES"]');
-      if (issuesBtn) setActiveButton(issuesBtn);
+      const issuesBtn = document.querySelector('#mainTabs [data-mode="ISSUES"]');
+      setActiveButton(issuesBtn);
+      renderRubricSubBar(allArticles);
       renderContent();
       openPdfReader(item.title, item.link, `issue-${idx + 1}`);
     }
@@ -96,8 +97,9 @@ function handleHashNavigation() {
     if (item && sanitizeUrl(item.link)) {
       currentMode = "ARTICLES";
       currentRubric = "ALL";
-      const allBtn = document.querySelector('[data-rubric="ALL"]');
-      if (allBtn) setActiveButton(allBtn);
+      const articlesBtn = document.querySelector('#mainTabs [data-mode="ARTICLES"]');
+      setActiveButton(articlesBtn);
+      renderRubricSubBar(allArticles);
       renderContent();
       openPdfReader(item.title, item.link, `article-${idx + 1}`);
     }
@@ -169,67 +171,139 @@ const normalizeLabel = (str) => {
 };
 
 function setActiveButton(targetBtn) {
-  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-  targetBtn.classList.add("active");
+  document.querySelectorAll("#mainTabs .filter-btn").forEach(b => b.classList.remove("active"));
+  if (targetBtn) targetBtn.classList.add("active");
   const searchEl = document.getElementById("searchInput");
   searchEl.style.display = (currentMode === "DONATE" || currentMode === "ABOUT") ? "none" : "block";
 }
 
-function setupFilters(articles) {
-  const container = document.getElementById("rubricFilters");
-  const issuesBtn = container.querySelector('[data-mode="ISSUES"]');
-  const newsBtn = container.querySelector('[data-mode="NEWS"]');
-  const donateBtn = container.querySelector('[data-mode="DONATE"]');
-  const aboutBtn = container.querySelector('[data-mode="ABOUT"]');
-  const allArticlesBtn = container.querySelector('[data-rubric="ALL"]');
+function renderRubricSubBar(articles) {
+  const subBar = document.getElementById("rubricSubBar");
+  if (!subBar) return;
 
-  issuesBtn.onclick = () => {
-    currentMode = "ISSUES";
-    setActiveButton(issuesBtn);
-    renderContent();
-  };
+  if (currentMode !== "ARTICLES") {
+    subBar.innerHTML = "";
+    return;
+  }
 
-  newsBtn.onclick = () => {
-    currentMode = "NEWS";
-    currentNewsCategory = "ALL";
-    setActiveButton(newsBtn);
-    renderContent();
-  };
+  const rubrics = ["ALL", ...new Set(articles.map(item => item.rubric).filter(Boolean))];
+  subBar.innerHTML = "";
 
-  donateBtn.onclick = () => {
-    currentMode = "DONATE";
-    setActiveButton(donateBtn);
-    renderContent();
-  };
-
-  aboutBtn.onclick = () => {
-    currentMode = "ABOUT";
-    setActiveButton(aboutBtn);
-    renderContent();
-  };
-
-  allArticlesBtn.onclick = () => {
-    currentMode = "ARTICLES";
-    currentRubric = "ALL";
-    setActiveButton(allArticlesBtn);
-    renderContent();
-  };
-
-  const rubrics = [...new Set(articles.map(item => item.rubric).filter(Boolean))];
   rubrics.forEach(rubric => {
     const btn = document.createElement("button");
-    btn.className = "filter-btn";
-    btn.dataset.mode = "ARTICLES";
-    btn.dataset.rubric = rubric;
-    btn.textContent = rubric;
+    btn.type = "button";
+    btn.className = currentRubric === rubric ? "sub-btn active" : "sub-btn";
+    btn.textContent = rubric === "ALL" ? "Все рубрики" : rubric;
     btn.onclick = () => {
-      currentMode = "ARTICLES";
       currentRubric = rubric;
-      setActiveButton(btn);
+      renderRubricSubBar(articles);
       renderContent();
     };
-    container.appendChild(btn);
+    subBar.appendChild(btn);
   });
+}
+
+function setupFilters(articles) {
+  const tabs = document.querySelectorAll("#mainTabs .filter-btn");
+  tabs.forEach(btn => {
+    btn.onclick = () => {
+      currentMode = btn.dataset.mode;
+      if (currentMode === "ARTICLES") currentRubric = "ALL";
+      if (currentMode === "NEWS") currentNewsCategory = "ALL";
+      setActiveButton(btn);
+      renderRubricSubBar(articles);
+      renderContent();
+    };
+  });
+
+  renderRubricSubBar(articles);
+}
+
+function buildQuotesPool(manualQuotes, articles) {
+  if (manualQuotes.length > 0) return manualQuotes;
+
+  return articles
+    .filter(a => a.rubric.toLowerCase() === "суть томима" && a.desc)
+    .map(a => ({
+      text: a.desc,
+      source: a.author ? `«${a.title}» • ${a.author}` : `«${a.title}»`,
+      title: a.title,
+      link: a.link,
+      articleId: a.id
+    }));
+}
+
+function renderDailyQuote(excludeCurrent = false) {
+  const slot = document.getElementById("dailyQuoteSlot");
+  if (!slot || allQuotes.length === 0) return;
+
+  if (allQuotes.length === 1) {
+    currentQuoteIndex = 0;
+  } else {
+    let nextIndex = Math.floor(Math.random() * allQuotes.length);
+    if (excludeCurrent && nextIndex === currentQuoteIndex) {
+      nextIndex = (nextIndex + 1) % allQuotes.length;
+    }
+    currentQuoteIndex = nextIndex;
+  }
+
+  const item = allQuotes[currentQuoteIndex];
+  const shareUrl = item.articleId
+    ? `${window.location.origin}${window.location.pathname}#article-${item.articleId}`
+    : `${window.location.origin}${window.location.pathname}`;
+
+  slot.innerHTML = `
+    <section class="daily-quote-box" aria-label="Быть Томимом каждый день">
+      <div class="daily-quote-top">
+        <div class="daily-quote-label">
+          <span class="diamond"></span>
+          <span>Быть Томимом каждый день</span>
+        </div>
+      </div>
+      <blockquote class="daily-quote-text">«${item.text.replace(/^[«"]|[»"]$/g, "")}»</blockquote>
+      <div class="daily-quote-bottom">
+        <div class="daily-quote-source">— ${item.source}</div>
+        <div class="daily-quote-actions" id="dailyQuoteActions"></div>
+      </div>
+    </section>
+  `;
+
+  const actionsEl = document.getElementById("dailyQuoteActions");
+
+  if (sanitizeUrl(item.link)) {
+    const readBtn = document.createElement("button");
+    readBtn.type = "button";
+    readBtn.className = "quote-btn primary";
+    readBtn.textContent = "Читать статью →";
+    const slug = item.articleId ? `article-${item.articleId}` : "";
+    readBtn.onclick = () => openPdfReader(item.title || item.source, item.link, slug);
+    actionsEl.appendChild(readBtn);
+  }
+
+  const shareBtn = document.createElement("button");
+  shareBtn.type = "button";
+  shareBtn.className = "quote-btn";
+  shareBtn.textContent = "Поделиться цитатой";
+  shareBtn.onclick = async () => {
+    const shareText = `«${item.text.replace(/^[«"]|[»"]$/g, "")}»\n\n— ${item.source} (Сообщество АТО • Москва)\nЧитать полностью: ${shareUrl}`;
+    try {
+      await navigator.clipboard.writeText(shareText);
+      shareBtn.textContent = "Цитата скопирована ✓";
+      setTimeout(() => { shareBtn.textContent = "Поделиться цитатой"; }, 2200);
+    } catch (e) {
+      prompt("Скопируйте цитату для отправки:", shareText);
+    }
+  };
+  actionsEl.appendChild(shareBtn);
+
+  if (allQuotes.length > 1) {
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "quote-btn";
+    nextBtn.textContent = "Другая мысль ↻";
+    nextBtn.onclick = () => renderDailyQuote(true);
+    actionsEl.appendChild(nextBtn);
+  }
 }
 
 function buildCardElement(item, isIssue, animIndex) {
@@ -511,92 +585,7 @@ function renderAboutSection(area) {
     </div>
   `;
 }
-function buildQuotesPool(manualQuotes, articles) {
-  if (manualQuotes.length > 0) return manualQuotes;
 
-  return articles
-    .filter(a => a.rubric.toLowerCase() === "суть томима" && a.desc)
-    .map(a => ({
-      text: a.desc,
-      source: a.author ? `«${a.title}» • ${a.author}` : `«${a.title}»`,
-      title: a.title,
-      link: a.link,
-      articleId: a.id
-    }));
-}
-
-function renderDailyQuote(excludeCurrent = false) {
-  const slot = document.getElementById("dailyQuoteSlot");
-  if (!slot || allQuotes.length === 0) return;
-
-  if (allQuotes.length === 1) {
-    currentQuoteIndex = 0;
-  } else {
-    let nextIndex = Math.floor(Math.random() * allQuotes.length);
-    if (excludeCurrent && nextIndex === currentQuoteIndex) {
-      nextIndex = (nextIndex + 1) % allQuotes.length;
-    }
-    currentQuoteIndex = nextIndex;
-  }
-
-  const item = allQuotes[currentQuoteIndex];
-  const shareUrl = item.articleId
-    ? `${window.location.origin}${window.location.pathname}#article-${item.articleId}`
-    : `${window.location.origin}${window.location.pathname}`;
-
-  slot.innerHTML = `
-    <section class="daily-quote-box" aria-label="Быть Томимом каждый день">
-      <div class="daily-quote-top">
-        <div class="daily-quote-label">
-          <span class="diamond"></span>
-          <span>Быть Томимом каждый день</span>
-        </div>
-      </div>
-      <blockquote class="daily-quote-text">«${item.text.replace(/^[«"]|[»"]$/g, "")}»</blockquote>
-      <div class="daily-quote-bottom">
-        <div class="daily-quote-source">— ${item.source}</div>
-        <div class="daily-quote-actions" id="dailyQuoteActions"></div>
-      </div>
-    </section>
-  `;
-
-  const actionsEl = document.getElementById("dailyQuoteActions");
-
-  if (sanitizeUrl(item.link)) {
-    const readBtn = document.createElement("button");
-    readBtn.type = "button";
-    readBtn.className = "quote-btn primary";
-    readBtn.textContent = "Читать статью →";
-    const slug = item.articleId ? `article-${item.articleId}` : "";
-    readBtn.onclick = () => openPdfReader(item.title || item.source, item.link, slug);
-    actionsEl.appendChild(readBtn);
-  }
-
-  const shareBtn = document.createElement("button");
-  shareBtn.type = "button";
-  shareBtn.className = "quote-btn";
-  shareBtn.textContent = "Поделиться цитатой";
-  shareBtn.onclick = async () => {
-    const shareText = `«${item.text.replace(/^[«"]|[»"]$/g, "")}»\n\n— ${item.source} (Сообщество АТО • Москва)\nЧитать полностью: ${shareUrl}`;
-    try {
-      await navigator.clipboard.writeText(shareText);
-      shareBtn.textContent = "Цитата скопирована ✓";
-      setTimeout(() => { shareBtn.textContent = "Поделиться цитатой"; }, 2200);
-    } catch (e) {
-      prompt("Скопируйте цитату для отправки:", shareText);
-    }
-  };
-  actionsEl.appendChild(shareBtn);
-
-  if (allQuotes.length > 1) {
-    const nextBtn = document.createElement("button");
-    nextBtn.type = "button";
-    nextBtn.className = "quote-btn";
-    nextBtn.textContent = "Другая мысль ↻";
-    nextBtn.onclick = () => renderDailyQuote(true);
-    actionsEl.appendChild(nextBtn);
-  }
-}
 function renderContent() {
   const area = document.getElementById("contentArea");
 
@@ -723,7 +712,8 @@ async function init() {
           photo: r[5] || ""
         }));
     }
-let manualQuotes = [];
+
+    let manualQuotes = [];
     if (QUOTES_CSV_URL) {
       const resQuotes = await fetch(QUOTES_CSV_URL);
       if (resQuotes.ok) {
@@ -740,6 +730,7 @@ let manualQuotes = [];
     }
     allQuotes = buildQuotesPool(manualQuotes, allArticles);
     renderDailyQuote();
+
     setupFilters(allArticles);
     renderContent();
     handleHashNavigation();
@@ -811,6 +802,7 @@ async function loadMoscowZmanim() {
 document.getElementById("searchInput").addEventListener("input", renderContent);
 init();
 loadMoscowZmanim();
+
 const scrollTopBtn = document.getElementById("scrollTopBtn");
 if (scrollTopBtn) {
   window.addEventListener("scroll", () => {
@@ -825,6 +817,7 @@ if (scrollTopBtn) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 }
+
 // Пасхалка: 18 кликов по логотипу в шапке
 (function initLogoEasterEgg() {
   const logoFrame = document.querySelector(".logo-frame");
@@ -835,7 +828,7 @@ if (scrollTopBtn) {
 
   const overlay = document.createElement("div");
   overlay.className = "easter-overlay";
- overlay.innerHTML = `
+  overlay.innerHTML = `
     <div class="easter-card">
       <div class="easter-text">יחי אדוננו מורנו ורבינו מלך המשיח לעולם ועד</div>
       <button type="button" class="easter-close">אמן</button>
