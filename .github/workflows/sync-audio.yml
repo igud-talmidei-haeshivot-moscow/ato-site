@@ -22,7 +22,7 @@ jobs:
           python3 - << 'EOF'
           import csv, io, os, re, urllib.request
 
-          CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouU1H-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=1555876785&single=true&output=csv"
+          CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=1555876785&single=true&output=csv"
           os.makedirs("audio", exist_ok=True)
 
           req = urllib.request.urlopen(CSV_URL)
