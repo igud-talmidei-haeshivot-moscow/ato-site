@@ -99,6 +99,14 @@
         <nav class="main-tabs" id="mainTabs" aria-label="Разделы сайта">
           <button type="button" class="filter-btn active" data-mode="ARTICLES">Статьи</button>
           <button type="button" class="filter-btn" data-mode="ISSUES">Выпуски (PDF)</button>
+          <nav class="main-tabs" id="mainTabs" aria-label="Разделы сайта">
+          <button type="button" class="filter-btn active" data-mode="ARTICLES">Статьи</button>
+          <button type="button" class="filter-btn" data-mode="ISSUES">Выпуски (PDF)</button>
+          <button type="button" class="filter-btn" data-mode="NIGUNIM">Нигуним</button>
+          <button type="button" class="filter-btn" data-mode="NEWS">Афиша и новости</button>
+          <button type="button" class="filter-btn" data-mode="DONATE">Пожертвования</button>
+          <button type="button" class="filter-btn" data-mode="ABOUT">О сообществе</button>
+        </nav>
           <button type="button" class="filter-btn" data-mode="NEWS">Афиша и новости</button>
           <button type="button" class="filter-btn" data-mode="DONATE">Пожертвования</button>
           <button type="button" class="filter-btn" data-mode="ABOUT">О сообществе</button>
@@ -142,11 +150,33 @@
 <div id="nigunPlayerBar" class="nigun-player-bar" aria-label="Плеер нигуна">
     <div class="nigun-player-inner">
       <div class="nigun-player-info">
-        <span class="nigun-badge">♪ Нигун</span>
-        <span id="nigunPlayerTitle" class="nigun-player-title">Название нигуна</span>
+        <span id="nigunPlayerCategory" class="nigun-badge">♪ Нигун</span>
+        <div class="nigun-title-wrap">
+          <span id="nigunPlayerTitle" class="nigun-player-title">Название нигуна</span>
+          <a id="nigunArticleLink" href="#" class="nigun-article-link" style="display:none;">Читать статью →</a>
+        </div>
       </div>
-      <div id="nigunPlayerMedia" class="nigun-player-media"></div>
-      <button type="button" id="nigunPlayerClose" class="nigun-close-btn" aria-label="Закрыть плеер" title="Закрыть">✕</button>
+
+      <div class="nigun-controls-center">
+        <div class="nigun-transport">
+          <button type="button" id="nigunShuffleBtn" class="nigun-icon-btn" title="Перемешать" aria-label="Перемешать">⇄</button>
+          <button type="button" id="nigunPrevBtn" class="nigun-icon-btn" title="Предыдущий нигун" aria-label="Предыдущий">⏮</button>
+          <button type="button" id="nigunPlayPauseBtn" class="nigun-play-btn" title="Пуск / Пауза" aria-label="Пуск / Пауза">▶</button>
+          <button type="button" id="nigunNextBtn" class="nigun-icon-btn" title="Следующий нигун" aria-label="Следующий">⏭</button>
+          <button type="button" id="nigunRepeatBtn" class="nigun-icon-btn" title="Повтор: выкл" aria-label="Повтор">↻</button>
+        </div>
+        <div class="nigun-timeline">
+          <span id="nigunCurrentTime" class="nigun-time">0:00</span>
+          <input type="range" id="nigunProgress" class="nigun-progress" min="0" max="100" step="0.1" value="0" aria-label="Перемотка" />
+          <span id="nigunDurationTime" class="nigun-time">0:00</span>
+        </div>
+      </div>
+
+      <div class="nigun-player-right">
+        <input type="range" id="nigunVolume" class="nigun-volume" min="0" max="1" step="0.05" value="1" title="Громкость" aria-label="Громкость" />
+        <a id="nigunDownloadBtn" href="#" download class="nigun-icon-btn" title="Скачать MP3" aria-label="Скачать MP3">⬇</a>
+        <button type="button" id="nigunPlayerClose" class="nigun-close-btn" aria-label="Закрыть плеер" title="Закрыть">✕</button>
+      </div>
     </div>
   </div>
 <button type="button" id="scrollTopBtn" class="scroll-top-btn" aria-label="Наверх" title="Наверх">↑</button>
