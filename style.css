@@ -1372,6 +1372,137 @@ header {
     text-align: center;
   }
 }
+/* Встроенный плеер нигунов */
+.card-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.listen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #EEF5FD;
+  border: 1.5px solid #B6D2F2;
+  color: var(--blue-accent);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.listen-btn:hover {
+  background-color: var(--blue-accent);
+  border-color: var(--blue-accent);
+  color: #FFFFFF;
+}
+
+.nigun-player-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-mid) 100%);
+  border-top: 2px solid var(--blue-accent);
+  box-shadow: 0 -10px 30px rgba(7, 22, 43, 0.45);
+  color: #FFFFFF;
+  z-index: 950;
+  transform: translateY(105%);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  padding: 0.75rem 1.25rem;
+}
+
+.nigun-player-bar.open {
+  transform: translateY(0);
+}
+
+.nigun-player-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.nigun-player-info {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 180px;
+  flex: 1 1 220px;
+}
+
+.nigun-badge {
+  background-color: var(--blue-accent);
+  color: #FFFFFF;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.nigun-player-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nigun-player-media {
+  flex: 2 1 320px;
+  display: flex;
+  align-items: center;
+}
+
+.nigun-player-media audio {
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.nigun-player-media iframe {
+  width: 100%;
+  height: 54px;
+  border: none;
+  border-radius: 8px;
+}
+
+.nigun-close-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.nigun-close-btn:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
