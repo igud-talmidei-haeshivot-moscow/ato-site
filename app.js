@@ -1,6 +1,7 @@
 // ================= ЗАФИКСИРОВАННЫЕ ССЫЛКИ =================
 const ARTICLES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=0&single=true&output=csv";
 const ISSUES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=103090562&single=true&output=csv";
+const NIGUNIM_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=1555876785&single=true&output=csv";
 const PATRONS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=654627083&single=true&output=csv";
 const NEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=948146673&single=true&output=csv";
 const QUOTES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT/pub?gid=1487106234&single=true&output=csv";
@@ -9,12 +10,14 @@ const DONATION_URL = "https://t.me/ATO_Moscow";
 
 let allArticles = [];
 let allIssues = [];
+let allNigunim = [];
 let allPatrons = [];
 let allNews = [];
 let allQuotes = [];
 let currentQuoteIndex = 0;
 let currentMode = "ARTICLES";
 let currentRubric = "ALL";
+let currentNigunCategory = "ALL";
 let currentNewsCategory = "ALL";
 
 function sanitizeUrl(url) {
@@ -67,7 +70,7 @@ function closePdfReader() {
   frameEl.src = "";
   document.body.style.overflow = "";
 
-  if (window.location.hash) {
+  if (window.location.hash && /^#(issue|article)-/i.test(window.location.hash)) {
     history.replaceState(null, "", window.location.pathname + window.location.search);
   }
 }
@@ -103,6 +106,22 @@ function handleHashNavigation() {
       renderRubricSubBar(allArticles);
       renderContent();
       openPdfReader(item.title, item.link, `article-${idx + 1}`);
+    }
+    return;
+  }
+
+  const nigunMatch = hash.match(/^nigun-(\d+)$/i);
+  if (nigunMatch) {
+    const idx = parseInt(nigunMatch[1], 10) - 1;
+    const item = allNigunim[idx];
+    if (item && sanitizeUrl(item.audio)) {
+      currentMode = "NIGUNIM";
+      currentNigunCategory = "ALL";
+      const nigunBtn = document.querySelector('#mainTabs [data-mode="NIGUNIM"]');
+      setActiveButton(nigunBtn);
+      renderRubricSubBar(allArticles);
+      renderContent();
+      playNigunFromList(item, allNigunim);
     }
   }
 }
@@ -176,6 +195,11 @@ function setActiveButton(targetBtn) {
   if (targetBtn) targetBtn.classList.add("active");
   const searchEl = document.getElementById("searchInput");
   searchEl.style.display = (currentMode === "DONATE" || currentMode === "ABOUT") ? "none" : "block";
+  if (currentMode === "NIGUNIM") {
+    searchEl.placeholder = "Поиск нигуна по названию или тому...";
+  } else {
+    searchEl.placeholder = "Поиск по названию, главе или автору...";
+  }
 }
 
 function renderRubricSubBar(articles) {
@@ -210,6 +234,7 @@ function setupFilters(articles) {
     btn.onclick = () => {
       currentMode = btn.dataset.mode;
       if (currentMode === "ARTICLES") currentRubric = "ALL";
+      if (currentMode === "NIGUNIM") currentNigunCategory = "ALL";
       if (currentMode === "NEWS") currentNewsCategory = "ALL";
       setActiveButton(btn);
       renderRubricSubBar(articles);
@@ -309,6 +334,13 @@ function renderDailyQuote(excludeCurrent = false) {
 
 // ================= КАСТОМНЫЙ АУДИОПЛЕЕР НИГУНОВ =================
 const nigunAudio = new Audio();
+nigunAudio.preload = "metadata";
+
+let currentPlaylist = [];
+let currentTrackIndex = -1;
+let currentTrackKey = "";
+let isShuffleMode = false;
+let repeatMode = "OFF"; // "OFF" | "ALL" | "ONE"
 
 function formatAudioTime(sec) {
   if (!isFinite(sec) || sec < 0) return "0:00";
@@ -320,49 +352,179 @@ function formatAudioTime(sec) {
 function resolveAudioSrc(rawUrl) {
   const safe = sanitizeUrl(rawUrl);
   if (!safe) return "";
-  const driveMatch = safe.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  const driveMatch = safe.match(/(?:drive\.google\.com\/file\/d\/|[?&]id=)([a-zA-Z0-9_-]+)/);
   if (driveMatch) {
     return `audio/${driveMatch[1]}.mp3`;
   }
   return safe;
 }
 
-function openNigunPlayer(title, rawAudioUrl) {
-  const src = resolveAudioSrc(rawAudioUrl);
+function updateActiveTrackHighlight() {
+  document.querySelectorAll(".nigun-row").forEach(row => {
+    const isCurrent = row.dataset.trackKey === currentTrackKey;
+    row.classList.toggle("playing", isCurrent && !nigunAudio.paused);
+    row.classList.toggle("active-track", isCurrent);
+    const btn = row.querySelector(".nigun-row-play");
+    if (btn) {
+      btn.textContent = (isCurrent && !nigunAudio.paused) ? "❚❚" : "▶";
+    }
+  });
+}
+
+function playTrackObject(track) {
+  if (!track) return;
+  const src = resolveAudioSrc(track.audio);
   if (!src) return;
 
   const bar = document.getElementById("nigunPlayerBar");
   const titleEl = document.getElementById("nigunPlayerTitle");
+  const catEl = document.getElementById("nigunPlayerCategory");
+  const articleEl = document.getElementById("nigunArticleLink");
   const playBtn = document.getElementById("nigunPlayPauseBtn");
   const progressEl = document.getElementById("nigunProgress");
-  const timeEl = document.getElementById("nigunTimeLabel");
+  const curTimeEl = document.getElementById("nigunCurrentTime");
+  const durTimeEl = document.getElementById("nigunDurationTime");
+  const downloadBtn = document.getElementById("nigunDownloadBtn");
 
-  titleEl.textContent = title || "Нигун месяца";
+  currentTrackKey = track.key || src;
+  titleEl.textContent = track.title || "Нигун";
+  catEl.textContent = track.category ? `♪ ${track.category}` : "♪ Нигун";
   progressEl.value = 0;
-  timeEl.textContent = "Загрузка...";
+  curTimeEl.textContent = "0:00";
+  durTimeEl.textContent = "...";
   playBtn.textContent = "❚❚";
 
+  if (downloadBtn) {
+    downloadBtn.href = src;
+    downloadBtn.setAttribute("download", `${(track.title || "nigun").replace(/[\\/:*?"<>|]/g, "_")}.mp3`);
+  }
+
+  const safeArticle = sanitizeUrl(track.articleLink);
+  if (articleEl) {
+    if (safeArticle) {
+      articleEl.style.display = "inline-block";
+      articleEl.href = safeArticle;
+      articleEl.onclick = (e) => {
+        e.preventDefault();
+        openPdfReader(track.title, safeArticle, "");
+      };
+    } else {
+      articleEl.style.display = "none";
+      articleEl.onclick = null;
+    }
+  }
+
+  if (track.id) {
+    history.replaceState(null, "", `#nigun-${track.id}`);
+  }
+
   nigunAudio.src = src;
-  nigunAudio.play().catch(() => {
-    playBtn.textContent = "▶";
-  });
+  nigunAudio.play()
+    .then(() => {
+      playBtn.textContent = "❚❚";
+      updateActiveTrackHighlight();
+    })
+    .catch(() => {
+      playBtn.textContent = "▶";
+      durTimeEl.textContent = "Ошибка файла";
+      updateActiveTrackHighlight();
+    });
 
   bar.classList.add("open");
+  document.body.classList.add("player-open");
+  updateActiveTrackHighlight();
+}
+
+function playNigunFromList(track, list) {
+  currentPlaylist = Array.isArray(list) && list.length > 0 ? list : [track];
+  currentTrackIndex = currentPlaylist.findIndex(t => (t.key || t.audio) === (track.key || track.audio));
+  if (currentTrackIndex < 0) currentTrackIndex = 0;
+  playTrackObject(currentPlaylist[currentTrackIndex]);
+}
+
+function openNigunPlayer(title, rawAudioUrl) {
+  const singleTrack = {
+    key: `article-${rawAudioUrl}`,
+    title: title || "Нигун месяца",
+    category: "Нигун к статье",
+    audio: rawAudioUrl,
+    articleLink: ""
+  };
+  playNigunFromList(singleTrack, [singleTrack]);
+}
+
+function playNextTrack(autoTriggered = false) {
+  if (currentPlaylist.length === 0) return;
+
+  if (autoTriggered && repeatMode === "ONE") {
+    nigunAudio.currentTime = 0;
+    nigunAudio.play();
+    return;
+  }
+
+  if (isShuffleMode && currentPlaylist.length > 1) {
+    let nextIdx = Math.floor(Math.random() * currentPlaylist.length);
+    if (nextIdx === currentTrackIndex) {
+      nextIdx = (nextIdx + 1) % currentPlaylist.length;
+    }
+    currentTrackIndex = nextIdx;
+    playTrackObject(currentPlaylist[currentTrackIndex]);
+    return;
+  }
+
+  if (currentTrackIndex + 1 < currentPlaylist.length) {
+    currentTrackIndex++;
+    playTrackObject(currentPlaylist[currentTrackIndex]);
+  } else if (repeatMode === "ALL") {
+    currentTrackIndex = 0;
+    playTrackObject(currentPlaylist[currentTrackIndex]);
+  } else {
+    const playBtn = document.getElementById("nigunPlayPauseBtn");
+    if (playBtn) playBtn.textContent = "▶";
+    updateActiveTrackHighlight();
+  }
+}
+
+function playPrevTrack() {
+  if (currentPlaylist.length === 0) return;
+  if (nigunAudio.currentTime > 4) {
+    nigunAudio.currentTime = 0;
+    return;
+  }
+  if (currentTrackIndex > 0) {
+    currentTrackIndex--;
+  } else {
+    currentTrackIndex = currentPlaylist.length - 1;
+  }
+  playTrackObject(currentPlaylist[currentTrackIndex]);
 }
 
 function closeNigunPlayer() {
   nigunAudio.pause();
   nigunAudio.src = "";
+  currentTrackKey = "";
   const bar = document.getElementById("nigunPlayerBar");
   if (bar) bar.classList.remove("open");
+  document.body.classList.remove("player-open");
+  updateActiveTrackHighlight();
+  if (window.location.hash && /^#nigun-/i.test(window.location.hash)) {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
 }
 
 const playPauseBtn = document.getElementById("nigunPlayPauseBtn");
+const prevTrackBtn = document.getElementById("nigunPrevBtn");
+const nextTrackBtn = document.getElementById("nigunNextBtn");
+const shuffleTrackBtn = document.getElementById("nigunShuffleBtn");
+const repeatTrackBtn = document.getElementById("nigunRepeatBtn");
 const progressSlider = document.getElementById("nigunProgress");
-const timeLabel = document.getElementById("nigunTimeLabel");
+const volumeSlider = document.getElementById("nigunVolume");
+const curTimeLabel = document.getElementById("nigunCurrentTime");
+const durTimeLabel = document.getElementById("nigunDurationTime");
 
 if (playPauseBtn) {
   playPauseBtn.addEventListener("click", () => {
+    if (!nigunAudio.src) return;
     if (nigunAudio.paused) {
       nigunAudio.play();
       playPauseBtn.textContent = "❚❚";
@@ -370,22 +532,56 @@ if (playPauseBtn) {
       nigunAudio.pause();
       playPauseBtn.textContent = "▶";
     }
+    updateActiveTrackHighlight();
+  });
+}
+
+if (prevTrackBtn) prevTrackBtn.addEventListener("click", playPrevTrack);
+if (nextTrackBtn) nextTrackBtn.addEventListener("click", () => playNextTrack(false));
+
+if (shuffleTrackBtn) {
+  shuffleTrackBtn.addEventListener("click", () => {
+    isShuffleMode = !isShuffleMode;
+    shuffleTrackBtn.classList.toggle("active", isShuffleMode);
+    shuffleTrackBtn.title = isShuffleMode ? "Перемешивание: вкл" : "Перемешать";
+  });
+}
+
+if (repeatTrackBtn) {
+  repeatTrackBtn.addEventListener("click", () => {
+    if (repeatMode === "OFF") {
+      repeatMode = "ALL";
+      repeatTrackBtn.classList.add("active");
+      repeatTrackBtn.textContent = "↻";
+      repeatTrackBtn.title = "Повтор: весь список";
+    } else if (repeatMode === "ALL") {
+      repeatMode = "ONE";
+      repeatTrackBtn.classList.add("active");
+      repeatTrackBtn.textContent = "↻1";
+      repeatTrackBtn.title = "Повтор: один нигун";
+    } else {
+      repeatMode = "OFF";
+      repeatTrackBtn.classList.remove("active");
+      repeatTrackBtn.textContent = "↻";
+      repeatTrackBtn.title = "Повтор: выкл";
+    }
   });
 }
 
 nigunAudio.addEventListener("timeupdate", () => {
   if (!isFinite(nigunAudio.duration)) return;
   progressSlider.value = (nigunAudio.currentTime / nigunAudio.duration) * 100;
-  timeLabel.textContent = `${formatAudioTime(nigunAudio.currentTime)} / ${formatAudioTime(nigunAudio.duration)}`;
+  curTimeLabel.textContent = formatAudioTime(nigunAudio.currentTime);
+  durTimeLabel.textContent = formatAudioTime(nigunAudio.duration);
 });
 
 nigunAudio.addEventListener("loadedmetadata", () => {
-  timeLabel.textContent = `0:00 / ${formatAudioTime(nigunAudio.duration)}`;
+  curTimeLabel.textContent = "0:00";
+  durTimeLabel.textContent = formatAudioTime(nigunAudio.duration);
 });
 
 nigunAudio.addEventListener("ended", () => {
-  playPauseBtn.textContent = "▶";
-  progressSlider.value = 0;
+  playNextTrack(true);
 });
 
 if (progressSlider) {
@@ -396,11 +592,159 @@ if (progressSlider) {
   });
 }
 
+if (volumeSlider) {
+  volumeSlider.addEventListener("input", () => {
+    nigunAudio.volume = parseFloat(volumeSlider.value);
+  });
+}
+
 const nigunCloseBtn = document.getElementById("nigunPlayerClose");
 if (nigunCloseBtn) {
   nigunCloseBtn.addEventListener("click", closeNigunPlayer);
 }
 // ================================================================
+
+function renderNigunimSection(area, query) {
+  area.innerHTML = "";
+
+  const uniqueCats = [...new Set(allNigunim.map(n => n.category).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, "ru", { numeric: true }));
+
+  const subBar = document.createElement("div");
+  subBar.className = "sub-filters";
+
+  ["ALL", ...uniqueCats].forEach(cat => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = currentNigunCategory === cat ? "sub-btn active" : "sub-btn";
+    btn.textContent = cat === "ALL" ? `Все тома (${allNigunim.length})` : cat;
+    btn.onclick = () => {
+      currentNigunCategory = cat;
+      renderContent();
+    };
+    subBar.appendChild(btn);
+  });
+
+  area.appendChild(subBar);
+
+  const filtered = allNigunim.filter(item => {
+    const matchCat = currentNigunCategory === "ALL" || item.category === currentNigunCategory;
+    const matchQuery = !query ||
+      item.title.toLowerCase().includes(query) ||
+      item.category.toLowerCase().includes(query);
+    return matchCat && matchQuery;
+  });
+
+  if (filtered.length === 0) {
+    const emptyBox = document.createElement("div");
+    emptyBox.className = "status-box";
+    emptyBox.textContent = "Нигуны по вашему запросу не найдены";
+    area.appendChild(emptyBox);
+    return;
+  }
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "nigun-list-toolbar";
+
+  const countInfo = document.createElement("div");
+  countInfo.className = "nigun-count-info";
+  countInfo.textContent = `Найдено нигунов: ${filtered.length}`;
+
+  const playAllBtn = document.createElement("button");
+  playAllBtn.type = "button";
+  playAllBtn.className = "quote-btn primary";
+  playAllBtn.textContent = "▶ Слушать всё подряд";
+  playAllBtn.onclick = () => playNigunFromList(filtered[0], filtered);
+
+  toolbar.append(countInfo, playAllBtn);
+  area.appendChild(toolbar);
+
+  const listWrap = document.createElement("div");
+  listWrap.className = "nigun-list";
+
+  filtered.forEach((item, index) => {
+    const row = document.createElement("div");
+    row.className = "nigun-row";
+    row.dataset.trackKey = item.key;
+    if (item.key === currentTrackKey) {
+      row.classList.add("active-track");
+      if (!nigunAudio.paused) row.classList.add("playing");
+    }
+
+    const playBtn = document.createElement("button");
+    playBtn.type = "button";
+    playBtn.className = "nigun-row-play";
+    playBtn.setAttribute("aria-label", `Слушать ${item.title}`);
+    playBtn.textContent = (item.key === currentTrackKey && !nigunAudio.paused) ? "❚❚" : "▶";
+    playBtn.onclick = () => {
+      if (item.key === currentTrackKey && nigunAudio.src) {
+        if (nigunAudio.paused) {
+          nigunAudio.play();
+        } else {
+          nigunAudio.pause();
+        }
+        const barBtn = document.getElementById("nigunPlayPauseBtn");
+        if (barBtn) barBtn.textContent = nigunAudio.paused ? "▶" : "❚❚";
+        updateActiveTrackHighlight();
+      } else {
+        playNigunFromList(item, filtered);
+      }
+    };
+
+    const numEl = document.createElement("span");
+    numEl.className = "nigun-row-num";
+    numEl.textContent = String(index + 1).padStart(2, "0");
+
+    const infoWrap = document.createElement("div");
+    infoWrap.className = "nigun-row-info";
+    infoWrap.onclick = () => playNigunFromList(item, filtered);
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "nigun-row-title";
+    titleEl.textContent = item.title;
+    infoWrap.appendChild(titleEl);
+
+    const actionsWrap = document.createElement("div");
+    actionsWrap.className = "nigun-row-actions";
+
+    if (item.category) {
+      const tagEl = document.createElement("span");
+      tagEl.className = "nigun-row-tag";
+      tagEl.textContent = item.category;
+      actionsWrap.appendChild(tagEl);
+    }
+
+    const safeArticle = sanitizeUrl(item.articleLink);
+    if (safeArticle) {
+      const artBtn = document.createElement("button");
+      artBtn.type = "button";
+      artBtn.className = "nigun-row-article";
+      artBtn.textContent = "Статья →";
+      artBtn.onclick = (e) => {
+        e.stopPropagation();
+        openPdfReader(item.title, safeArticle, "");
+      };
+      actionsWrap.appendChild(artBtn);
+    }
+
+    const resolvedSrc = resolveAudioSrc(item.audio);
+    if (resolvedSrc) {
+      const dlLink = document.createElement("a");
+      dlLink.href = resolvedSrc;
+      dlLink.setAttribute("download", `${item.title.replace(/[\\/:*?"<>|]/g, "_")}.mp3`);
+      dlLink.className = "nigun-row-dl";
+      dlLink.title = "Скачать MP3";
+      dlLink.textContent = "⬇";
+      dlLink.onclick = (e) => e.stopPropagation();
+      actionsWrap.appendChild(dlLink);
+    }
+
+    row.append(playBtn, numEl, infoWrap, actionsWrap);
+    listWrap.appendChild(row);
+  });
+
+  area.appendChild(listWrap);
+}
 
 function buildCardElement(item, isIssue, animIndex) {
   const card = document.createElement("article");
@@ -711,6 +1055,11 @@ function renderContent() {
 
   const query = document.getElementById("searchInput").value.toLowerCase().trim();
 
+  if (currentMode === "NIGUNIM") {
+    renderNigunimSection(area, query);
+    return;
+  }
+
   if (currentMode === "NEWS") {
     renderNewsSection(area, query);
     return;
@@ -763,11 +1112,12 @@ async function init() {
   const area = document.getElementById("contentArea");
 
   try {
-    const [resArticles, resIssues, resPatrons, resNews] = await Promise.all([
+    const [resArticles, resIssues, resPatrons, resNews, resNigunim] = await Promise.all([
       fetch(ARTICLES_CSV_URL),
       fetch(ISSUES_CSV_URL),
       fetch(PATRONS_CSV_URL),
-      fetch(NEWS_CSV_URL)
+      fetch(NEWS_CSV_URL),
+      fetch(NIGUNIM_CSV_URL)
     ]);
 
     if (resArticles.ok) {
@@ -821,6 +1171,20 @@ async function init() {
           body: r[3] || "",
           link: r[4] || "",
           photo: r[5] || ""
+        }));
+    }
+
+    if (resNigunim.ok) {
+      const rows = parseCSV(await resNigunim.text());
+      allNigunim = rows.slice(1)
+        .filter(r => r[0] && r[2])
+        .map((r, i) => ({
+          id: i + 1,
+          key: `nigun-${i + 1}`,
+          title: r[0] || "",
+          category: normalizeLabel(r[1]),
+          audio: r[2] || "",
+          articleLink: r[3] || ""
         }));
     }
 
