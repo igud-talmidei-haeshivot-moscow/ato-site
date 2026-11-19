@@ -1604,3 +1604,308 @@ header {
   }
 }
 }
+/* Раздел «Нигуним» и расширенный плеер */
+body.player-open .scroll-top-btn {
+  bottom: 5.5rem;
+}
+
+body.player-open footer {
+  padding-bottom: 6.25rem;
+}
+
+.nigun-list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1.1rem;
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 12px;
+}
+
+.nigun-count-info {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.nigun-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  animation: fadeSlideUp 0.4s ease-out both;
+}
+
+.nigun-row {
+  display: grid;
+  grid-template-columns: 38px 34px 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 11px;
+  padding: 0.65rem 1rem;
+  box-shadow: 0 3px 10px -4px rgba(7, 22, 43, 0.06);
+  transition: border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+}
+
+.nigun-row:hover {
+  border-color: var(--blue-accent);
+  background-color: #F7FAFF;
+}
+
+.nigun-row.active-track {
+  border-color: var(--blue-accent);
+  background: linear-gradient(90deg, #EBF4FF 0%, #FFFFFF 100%);
+}
+
+.nigun-row-play {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: 1.5px solid #B6D2F2;
+  background-color: var(--bg-tint);
+  color: var(--navy-deep);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.nigun-row:hover .nigun-row-play,
+.nigun-row.active-track .nigun-row-play {
+  background-color: var(--blue-accent);
+  border-color: var(--blue-accent);
+  color: #FFFFFF;
+}
+
+.nigun-row-num {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.nigun-row-info {
+  cursor: pointer;
+  min-width: 0;
+}
+
+.nigun-row-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.08rem;
+  letter-spacing: 0.02em;
+  color: var(--navy-deep);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nigun-row.active-track .nigun-row-title {
+  color: var(--blue-accent);
+}
+
+.nigun-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nigun-row-tag {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: var(--bg-tint);
+  border: 1px solid #B6D2F2;
+  color: var(--navy-deep);
+  padding: 0.22rem 0.55rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.nigun-row-article {
+  background-color: var(--navy-deep);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.26rem 0.6rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.nigun-row-article:hover {
+  background-color: var(--blue-accent);
+}
+
+.nigun-row-dl {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-page);
+  color: var(--navy-deep);
+  text-decoration: none;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.nigun-row-dl:hover {
+  border-color: var(--blue-accent);
+  background-color: var(--blue-accent);
+  color: #FFFFFF;
+}
+
+/* Улучшенный нижний плеер */
+.nigun-title-wrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nigun-article-link {
+  font-size: 0.78rem;
+  color: #90CAF9;
+  text-decoration: none;
+}
+
+.nigun-article-link:hover {
+  text-decoration: underline;
+  color: #FFFFFF;
+}
+
+.nigun-controls-center {
+  flex: 2 1 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.nigun-transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.nigun-play-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--blue-accent);
+  color: #FFFFFF;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(10, 116, 218, 0.45);
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.nigun-play-btn:hover {
+  background-color: var(--blue-bright);
+  transform: scale(1.06);
+}
+
+.nigun-icon-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #E6EFFA;
+  height: 32px;
+  min-width: 32px;
+  padding: 0 0.45rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.nigun-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+}
+
+.nigun-icon-btn.active {
+  background-color: var(--blue-accent);
+  border-color: var(--blue-bright);
+  color: #FFFFFF;
+}
+
+.nigun-timeline {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.nigun-time {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.78rem;
+  color: #A8C0DC;
+  min-width: 34px;
+  text-align: center;
+}
+
+.nigun-progress {
+  flex: 1;
+  accent-color: var(--blue-bright);
+  cursor: pointer;
+  height: 5px;
+}
+
+.nigun-player-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nigun-volume {
+  width: 74px;
+  accent-color: var(--blue-bright);
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .nigun-row {
+    grid-template-columns: 36px 1fr auto;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .nigun-row-num {
+    display: none;
+  }
+
+  .nigun-volume {
+    display: none;
+  }
+
+  .nigun-player-inner {
+    gap: 0.55rem;
+  }
+
+  body.player-open .scroll-top-btn {
+    bottom: 7.5rem;
+  }
+}
