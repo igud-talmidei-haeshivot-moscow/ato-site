@@ -13,26 +13,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install browser-impersonating HTTP client
+        run: pip install curl_cffi
+
       - name: Scrape and download Chabad Melodies
         run: |
           python3 - << 'EOF'
-          import csv, html, os, re, time, urllib.parse, urllib.request
+          import csv, html, os, re, time, urllib.parse
+          from curl_cffi import requests
 
           BASE_URL = "https://www.chabad.org"
           INDEX_URL = "https://www.chabad.org/multimedia/music_cdo/aid/140602/jewish/Chabad-Melodies.htm"
-          HEADERS = {
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-          }
 
-          def fetch(url):
-              req = urllib.request.Request(url, headers=HEADERS)
-              with urllib.request.urlopen(req, timeout=25) as resp:
-                  return resp.read().decode("utf-8", errors="ignore")
+          session = requests.Session(impersonate="chrome")
+
+          def fetch_text(url):
+              resp = session.get(url, timeout=30)
+              resp.raise_for_status()
+              return resp.text
 
           os.makedirs("audio/chabad", exist_ok=True)
-          index_html = fetch(INDEX_URL)
+          index_html = fetch_text(INDEX_URL)
 
-          # Находим все ссылки на тома (Volume 1 ... Volume 16)
+          # Находим ссылки на все тома (Volume 1 ... Volume 16)
           vol_matches = re.findall(
               r'href="(/multimedia/music_cdo/aid/\d+/jewish/Volume-(\d+)[^"]*)"',
               index_html,
@@ -51,9 +54,19 @@ jobs:
           for vol_num in sorted(volumes.keys()):
               vol_url = volumes[vol_num]
               print(f"Scanning Volume {vol_num}: {vol_url}")
-              vol_html = fetch(vol_url)
+              vol_html = fetch_text(vol_url)
 
-              # Находим все треки внутри тома
+              # Проверяем, есть ли ссылка "View All" для раскрытия всех треков тома
+              view_all = re.search(
+                  r'href="(/multimedia/music_cdo/aid/\d+/jewish/[^"]*)"[^>]*>\s*View\s+All',
+                  vol_html,
+                  flags=re.IGNORECASE
+              )
+              if view_all:
+                  full_vol_url = urllib.parse.urljoin(BASE_URL, view_all.group(1))
+                  print(f"  -> Following View All: {full_vol_url}")
+                  vol_html = fetch_text(full_vol_url)
+
               track_links = re.findall(
                   r'href="(/multimedia/music_cdo/aid/(\d+)/jewish/[^"]+)"',
                   vol_html
@@ -66,19 +79,17 @@ jobs:
 
                   t_url = urllib.parse.urljoin(BASE_URL, t_path)
                   try:
-                      t_html = fetch(t_url)
+                      t_html = fetch_text(t_url)
                   except Exception as e:
                       print(f"Skip {t_url}: {e}")
                       continue
 
-                  # Ищем прямую ссылку на mp3 в коде страницы/плеера
                   mp3_match = re.search(r'(https?://[^"\'\s<>]+\.mp3(?:\?[^"\'\s<>]*)?)', t_html)
                   if not mp3_match:
                       continue
 
                   mp3_url = html.unescape(mp3_match.group(1))
 
-                  # Вытаскиваем название нигуна из заголовка <h1> или <title>
                   h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', t_html, flags=re.S)
                   if h1_match:
                       title = re.sub(r'<[^>]+>', '', h1_match.group(1)).strip()
@@ -89,9 +100,10 @@ jobs:
                   local_path = f"audio/chabad/vol{vol_num}_{aid}.mp3"
                   if not os.path.exists(local_path):
                       try:
-                          req_mp3 = urllib.request.Request(mp3_url, headers=HEADERS)
-                          with urllib.request.urlopen(req_mp3, timeout=40) as r_mp3, open(local_path, "wb") as f_out:
-                              f_out.write(r_mp3.read())
+                          mp3_resp = session.get(mp3_url, timeout=45)
+                          mp3_resp.raise_for_status()
+                          with open(local_path, "wb") as f_out:
+                              f_out.write(mp3_resp.content)
                           print(f"Downloaded: {title} -> {local_path}")
                       except Exception as e:
                           print(f"Failed MP3 {mp3_url}: {e}")
