@@ -719,11 +719,36 @@ if (volumeSlider) {
   });
 }
 
-const nigunCloseBtn = document.getElementById("nigunPlayerClose");
-if (nigunCloseBtn) {
-  nigunCloseBtn.addEventListener("click", closeNigunPlayer);
+function syncPlayerLayoutOffset() {
+  const bar = document.getElementById("nigunPlayerBar");
+  const scrollBtn = document.getElementById("scrollTopBtn");
+  const footerEl = document.querySelector("footer");
+  if (!bar || !document.body.classList.contains("player-open")) {
+    if (scrollBtn) scrollBtn.style.bottom = "";
+    if (footerEl) footerEl.style.paddingBottom = "";
+    return;
+  }
+  const barHeight = bar.offsetHeight || 0;
+  if (barHeight > 0) {
+    if (scrollBtn) scrollBtn.style.bottom = `${barHeight + 14}px`;
+    if (footerEl) footerEl.style.paddingBottom = `${barHeight + 24}px`;
+  }
 }
 
+window.addEventListener("resize", syncPlayerLayoutOffset, { passive: true });
+const playerBarEl = document.getElementById("nigunPlayerBar");
+if (playerBarEl && typeof ResizeObserver !== "undefined") {
+  new ResizeObserver(syncPlayerLayoutOffset).observe(playerBarEl);
+}
+
+const nigunCloseBtn = document.getElementById("nigunPlayerClose");
+if (nigunCloseBtn) {
+  nigunCloseBtn.addEventListener("click", () => {
+    closeNigunPlayer();
+    syncPlayerLayoutOffset();
+  });
+}
+// ================================================================
 // Горячие клавиши плеера: Space (пуск/пауза), ← / → (перемотка ±5 сек)
 document.addEventListener("keydown", (e) => {
   if (e.ctrlKey || e.altKey || e.metaKey) return;
