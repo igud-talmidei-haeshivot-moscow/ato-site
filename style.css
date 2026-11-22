@@ -2344,3 +2344,111 @@ body.player-open footer {
   border-color: #90CAF9;
   color: #FFFFFF;
 }
+/* Виджет «К дате и неделе» */
+.calendar-context-box {
+  margin: 1.25rem auto 0;
+  background: linear-gradient(135deg, #FFFFFF 0%, #F0F6FE 100%);
+  border: 1.5px solid #B6D2F2;
+  border-left: 5px solid var(--blue-accent);
+  border-radius: 14px;
+  box-shadow: 0 6px 20px -8px rgba(7, 22, 43, 0.12);
+  padding: 1.05rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: fadeSlideUp 0.5s ease-out both;
+}
+
+.calendar-context-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.calendar-context-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--blue-accent);
+}
+
+.calendar-context-badge {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: var(--navy-deep);
+  color: #FFFFFF;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+}
+
+.calendar-context-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.calendar-context-chip {
+  flex: 1 1 260px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 0.65rem 0.95rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.calendar-context-chip:hover {
+  border-color: var(--blue-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -6px rgba(10, 116, 218, 0.28);
+}
+
+.calendar-chip-meta {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--blue-accent);
+}
+
+.calendar-chip-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.02rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--navy-deep);
+  line-height: 1.2;
+}
+
+.calendar-chip-arrow {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  color: var(--blue-accent);
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .calendar-context-box {
+    padding: 0.95rem 1.05rem;
+  }
+
+  .calendar-context-chip {
+    flex: 1 1 100%;
+  }
+}
