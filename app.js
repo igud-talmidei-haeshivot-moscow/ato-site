@@ -1536,7 +1536,9 @@ async function init() {
     }
 allQuotes = buildQuotesPool(manualQuotes, allArticles);
 
-renderDailyQuote();
+    renderFeaturedIssue();
+    renderCalendarContextWidget();
+    renderDailyQuote();
     setupFilters(allArticles);
     renderContent();
     handleHashNavigation();
