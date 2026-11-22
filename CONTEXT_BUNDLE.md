@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-22 16:53 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-22 16:56 UTC_
 
 ---
 
@@ -99,9 +99,10 @@ _Автоматически собрано из ветки `main`: 2026-11-22 16
       </div>
   </header>
 
-  <main>
+<main>
 <div class="container">
 <div id="featuredIssueSlot"></div>
+<div id="calendarContextSlot"></div>
 <div id="dailyQuoteSlot"></div>
       <div class="controls">
        <nav class="main-tabs" id="mainTabs" aria-label="Разделы сайта">
