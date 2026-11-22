@@ -1543,6 +1543,7 @@ renderDailyQuote();
     renderContent();
     handleHashNavigation();
   } catch (err) {
+    console.error("Ошибка init():", err);
     area.innerHTML = '<div class="status-box">Не удалось загрузить данные. Проверьте публикацию листов в интернет.</div>';
   }
 }
