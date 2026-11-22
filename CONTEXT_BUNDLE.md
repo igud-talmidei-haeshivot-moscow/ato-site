@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-22 16:48 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-22 16:53 UTC_
 
 ---
 
@@ -2541,6 +2541,7 @@ let allQuotes = [];
 let currentQuoteIndex = 0;
 let currentMode = "ARTICLES";
 let currentRubric = "ALL";
+let currentAuthor = "ALL";
 let currentNigunCategory = "ALL";
 let currentNewsCategory = "ALL";
 
@@ -2634,7 +2635,7 @@ function handleHashNavigation() {
     return;
   }
 
-  const nigunMatch = hash.match(/^nigun-(\d+)$/i);
+const nigunMatch = hash.match(/^nigun-(\d+)$/i);
   if (nigunMatch) {
     const idx = parseInt(nigunMatch[1], 10) - 1;
     const item = allNigunim[idx];
@@ -2647,8 +2648,52 @@ function handleHashNavigation() {
       renderContent();
       playNigunFromList(item, allNigunim);
     }
+    return;
   }
-  const quoteMatch = hash.match(/^quote-(\d+)$/i);
+
+  const authorMatch = hash.match(/^author-(.+)$/i);
+  if (authorMatch) {
+    const requestedSlug = decodeURIComponent(authorMatch[1]).toLowerCase();
+    const matched = allArticles.find(a => a.author && toAuthorSlug(a.author).toLowerCase() === requestedSlug);
+    if (matched) {
+      filterByAuthor(matched.author, false);
+    }
+  }
+}
+
+function toAuthorSlug(authorName) {
+  return (authorName || "")
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
+function filterByAuthor(authorName, shouldScroll = true) {
+  currentMode = "ARTICLES";
+  currentRubric = "ALL";
+  currentAuthor = authorName || "ALL";
+
+  const articlesBtn = document.querySelector('#mainTabs [data-mode="ARTICLES"]');
+  setActiveButton(articlesBtn);
+  renderRubricSubBar(allArticles);
+  renderContent();
+
+  if (currentAuthor !== "ALL") {
+    history.replaceState(null, "", `#author-${encodeURIComponent(toAuthorSlug(currentAuthor))}`);
+    if (shouldScroll) {
+      document.getElementById("mainTabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  } else if (window.location.hash && /^#author-/i.test(window.location.hash)) {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
+}
+
+function pluralizeArticles(count) {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${count} публикация`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${count} публикации`;
+  return `${count} публикаций`;
+}t quoteMatch = hash.match(/^quote-(\d+)$/i);
   if (quoteMatch) {
     const targetId = parseInt(quoteMatch[1], 10);
     const qIdx = allQuotes.findIndex(q => q.id === targetId);
@@ -2771,7 +2816,13 @@ function setupFilters(articles) {
   tabs.forEach(btn => {
     btn.onclick = () => {
       currentMode = btn.dataset.mode;
-      if (currentMode === "ARTICLES") currentRubric = "ALL";
+      if (currentMode === "ARTICLES") {
+        currentRubric = "ALL";
+        currentAuthor = "ALL";
+        if (window.location.hash && /^#author-/i.test(window.location.hash)) {
+          history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
+      }
       if (currentMode === "NIGUNIM") currentNigunCategory = "ALL";
       if (currentMode === "NEWS") currentNewsCategory = "ALL";
       setActiveButton(btn);
@@ -3486,12 +3537,24 @@ const leftSpan = document.createElement("span");
 leftSpan.className = "card-top-badge";
 leftSpan.textContent = isIssue ? (item.type || "Выпуск") : (item.rubric || "Статья");
 
-const rightSpan = document.createElement("span");
-rightSpan.className = "card-top-meta";
-rightSpan.textContent = isIssue ? (item.period || "") : (item.author || "");
+let rightEl;
+if (!isIssue && item.author) {
+  rightEl = document.createElement("button");
+  rightEl.type = "button";
+  rightEl.className = "card-top-meta author-top-btn";
+  rightEl.title = `Показать все статьи автора: ${item.author}`;
+  rightEl.textContent = item.author;
+  rightEl.onclick = (e) => {
+    e.stopPropagation();
+    filterByAuthor(item.author, true);
+  };
+} else {
+  rightEl = document.createElement("span");
+  rightEl.className = "card-top-meta";
+  rightEl.textContent = isIssue ? (item.period || "") : "";
+}
 
-cardTop.append(leftSpan, rightSpan);
-
+cardTop.append(leftSpan, rightEl);
 const cardBody = document.createElement("div");
 cardBody.className = "card-body";
 
@@ -3832,27 +3895,71 @@ function renderContent() {
     return;
   }
 
-  const filtered = allArticles.filter(item => {
+const filtered = allArticles.filter(item => {
     const matchRubric = currentRubric === "ALL" || item.rubric === currentRubric;
+    const matchAuthor = currentAuthor === "ALL" || item.author === currentAuthor;
     const matchQuery = !query ||
       item.title.toLowerCase().includes(query) ||
       item.author.toLowerCase().includes(query) ||
       item.desc.toLowerCase().includes(query);
-    return matchRubric && matchQuery;
+    return matchRubric && matchAuthor && matchQuery;
   });
 
+  area.innerHTML = "";
+
+  if (currentAuthor !== "ALL") {
+    const totalByAuthor = allArticles.filter(a => a.author === currentAuthor).length;
+    const rubricsByAuthor = [...new Set(allArticles.filter(a => a.author === currentAuthor).map(a => a.rubric).filter(Boolean))];
+    const authorSlug = `author-${encodeURIComponent(toAuthorSlug(currentAuthor))}`;
+
+    const profileBar = document.createElement("section");
+    profileBar.className = "author-profile-bar";
+    profileBar.setAttribute("aria-label", `Профиль автора: ${currentAuthor}`);
+    profileBar.innerHTML = `
+      <div class="author-profile-info">
+        <div class="author-profile-eyebrow">
+          <span class="diamond"></span>
+          <span>Автор сообщества АТО</span>
+        </div>
+        <div class="author-profile-name">${currentAuthor}</div>
+        <div class="author-profile-stats">
+          В архиве: <strong>${pluralizeArticles(totalByAuthor)}</strong>${rubricsByAuthor.length ? ` • Рубрики: ${rubricsByAuthor.join(", ")}` : ""}
+        </div>
+      </div>
+      <div class="author-profile-actions" id="authorProfileActions"></div>
+    `;
+
+    area.appendChild(profileBar);
+
+    const actionsEl = profileBar.querySelector("#authorProfileActions");
+    const shareAuthorBtn = document.createElement("button");
+    shareAuthorBtn.type = "button";
+    shareAuthorBtn.className = "quote-btn";
+    shareAuthorBtn.textContent = "Поделиться автором";
+    shareAuthorBtn.onclick = () => copyShareUrlToClipboard(authorSlug, shareAuthorBtn, "Поделиться автором");
+
+    const resetAuthorBtn = document.createElement("button");
+    resetAuthorBtn.type = "button";
+    resetAuthorBtn.className = "quote-btn primary";
+    resetAuthorBtn.textContent = "Все авторы ×";
+    resetAuthorBtn.onclick = () => filterByAuthor("ALL", false);
+
+    actionsEl.append(shareAuthorBtn, resetAuthorBtn);
+  }
+
   if (filtered.length === 0) {
-    area.innerHTML = '<div class="status-box">По вашему запросу материалы не найдены</div>';
+    const emptyBox = document.createElement("div");
+    emptyBox.className = "status-box";
+    emptyBox.textContent = "По вашему запросу материалы не найдены";
+    area.appendChild(emptyBox);
     return;
   }
 
   const grid = document.createElement("div");
   grid.className = "grid";
   filtered.forEach((item, idx) => grid.appendChild(buildCardElement(item, false, idx)));
-  area.innerHTML = "";
   area.appendChild(grid);
 }
-
 async function init() {
   const area = document.getElementById("contentArea");
 
