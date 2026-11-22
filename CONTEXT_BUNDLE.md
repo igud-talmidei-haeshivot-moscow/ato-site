@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-22 16:23 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-22 16:31 UTC_
 
 ---
 
@@ -3035,6 +3035,51 @@ const nigunCloseBtn = document.getElementById("nigunPlayerClose");
 if (nigunCloseBtn) {
   nigunCloseBtn.addEventListener("click", closeNigunPlayer);
 }
+
+// Горячие клавиши плеера: Space (пуск/пауза), ← / → (перемотка ±5 сек)
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+  const activeEl = document.activeElement;
+  const tagName = activeEl ? activeEl.tagName : "";
+  if (
+    activeEl?.id === "searchInput" ||
+    tagName === "INPUT" ||
+    tagName === "TEXTAREA" ||
+    tagName === "SELECT" ||
+    activeEl?.isContentEditable
+  ) {
+    return;
+  }
+
+  const pdfModal = document.getElementById("pdfModal");
+  if (pdfModal && pdfModal.classList.contains("open")) return;
+
+  if (!nigunAudio.src) return;
+
+  if (e.code === "Space") {
+    e.preventDefault();
+    if (nigunAudio.paused) {
+      nigunAudio.play();
+      if (playPauseBtn) playPauseBtn.textContent = "❚❚";
+    } else {
+      nigunAudio.pause();
+      if (playPauseBtn) playPauseBtn.textContent = "▶";
+    }
+    updateActiveTrackHighlight();
+  } else if (e.code === "ArrowLeft") {
+    e.preventDefault();
+    if (isFinite(nigunAudio.duration)) {
+      nigunAudio.currentTime = Math.max(0, nigunAudio.currentTime - 5);
+    }
+  } else if (e.code === "ArrowRight") {
+    e.preventDefault();
+    if (isFinite(nigunAudio.duration)) {
+      nigunAudio.currentTime = Math.min(nigunAudio.duration, nigunAudio.currentTime + 5);
+    }
+  }
+});
+// ================================================================
 // ================================================================
 
 function renderNigunimSection(area, query) {
@@ -3159,6 +3204,18 @@ function renderNigunimSection(area, query) {
       };
       actionsWrap.appendChild(artBtn);
     }
+
+   const shareBtn = document.createElement("button");
+    shareBtn.type = "button";
+    shareBtn.className = "nigun-row-share";
+    shareBtn.title = "Скопировать прямую ссылку на нигун";
+    shareBtn.setAttribute("aria-label", `Поделиться нигуном ${item.title}`);
+    shareBtn.textContent = "Поделиться";
+    shareBtn.onclick = (e) => {
+      e.stopPropagation();
+      copyShareUrlToClipboard(item.key, shareBtn, "Поделиться");
+    };
+    actionsWrap.appendChild(shareBtn);
 
     const resolvedSrc = resolveAudioSrc(item.audio);
     if (resolvedSrc) {
