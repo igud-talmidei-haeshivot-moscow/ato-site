@@ -185,20 +185,6 @@ function pluralizeArticles(count) {
   if (mod10 === 1 && mod100 !== 11) return `${count} публикация`;
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${count} публикации`;
   return `${count} публикаций`;
-}t quoteMatch = hash.match(/^quote-(\d+)$/i);
-  if (quoteMatch) {
-    const targetId = parseInt(quoteMatch[1], 10);
-    const qIdx = allQuotes.findIndex(q => q.id === targetId);
-    if (qIdx !== -1) {
-      renderDailyQuote(false, qIdx);
-      const quoteBox = document.querySelector(".daily-quote-box");
-      if (quoteBox) {
-        quoteBox.classList.add("quote-highlighted");
-        quoteBox.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => quoteBox.classList.remove("quote-highlighted"), 2600);
-      }
-    }
-  }
 }
 
 document.getElementById("pdfCloseBtn").addEventListener("click", closePdfReader);
