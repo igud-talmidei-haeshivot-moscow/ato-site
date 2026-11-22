@@ -1,0 +1,66 @@
+name: Bundle Code Context for NotebookLM
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'index.html'
+      - 'style.css'
+      - 'app.js'
+      - '.github/workflows/sync-audio.yml'
+      - '.github/workflows/bundle-context.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build CONTEXT_BUNDLE.md
+        run: |
+          python3 - << 'EOF'
+          import datetime
+
+          files = [
+              ("index.html", "html"),
+              ("style.css", "css"),
+              ("app.js", "javascript"),
+              (".github/workflows/sync-audio.yml", "yaml"),
+          ]
+
+          now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+          out = [
+              "# ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)",
+              f"_Автоматически собрано из ветки `main`: {now}_",
+              "",
+              "---",
+              ""
+          ]
+
+          for path, lang in files:
+              out.append(f"## Файл: `{path}`")
+              out.append(f"```{lang}")
+              try:
+                  with open(path, "r", encoding="utf-8") as f:
+                      out.append(f.read().rstrip())
+              except FileNotFoundError:
+                  out.append(f"# Файл {path} не найден")
+              out.append("```")
+              out.append("")
+
+          with open("CONTEXT_BUNDLE.md", "w", encoding="utf-8") as f:
+              f.write("\n".join(out) + "\n")
+          EOF
+
+      - name: Commit and push CONTEXT_BUNDLE.md
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CONTEXT_BUNDLE.md
+          git diff --staged --quiet || git commit -m "Auto-bundle code context [skip ci]"
+          git push
