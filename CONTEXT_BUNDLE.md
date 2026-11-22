@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-22 17:16 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-22 17:29 UTC_
 
 ---
 
@@ -56,6 +56,24 @@ _Автоматически собрано из ветки `main`: 2026-11-22 17
   <!-- /Yandex.Metrika counter -->
 </head>
 <body>
+ <body>
+  <div id="atoPreloader" class="ato-preloader" role="status" aria-live="polite" aria-label="Загрузка архива АТО">
+    <div class="ato-preloader-card">
+      <div class="ato-preloader-logo">
+        <img src="logo.png" alt="Сообщество АТО" />
+      </div>
+      <div class="ato-preloader-eyebrow">
+        <span class="diamond"></span>
+        <span>Tomchei Tmimin Lubavitch Moscow • תשפ״ז</span>
+        <span class="diamond"></span>
+      </div>
+      <div class="ato-preloader-title">Загрузка архива...</div>
+      <div class="ato-preloader-bar">
+        <div class="ato-preloader-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
   <noscript><div><img src="https://mc.yandex.ru/watch/114297805" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
 
   <div class="zmanim-bar">
