@@ -244,7 +244,79 @@ function setupFilters(articles) {
 
   renderRubricSubBar(articles);
 }
+async function copyShareUrlToClipboard(hashSlug, btnEl, defaultLabel) {
+const baseUrl = `${window.location.origin}${window.location.pathname}`;
+const fullUrl = hashSlug ? `${baseUrl}#${hashSlug}` : baseUrl;
+try {
+await navigator.clipboard.writeText(fullUrl);
+if (btnEl) {
+btnEl.classList.add("copied");
+btnEl.textContent = "✓ Скопировано";
+setTimeout(() => {
+btnEl.classList.remove("copied");
+btnEl.textContent = defaultLabel;
+}, 2200);
+}
+} catch (err) {
+prompt("Скопируйте прямую ссылку:", fullUrl);
+}
+}
 
+function renderFeaturedIssue() {
+const slot = document.getElementById("featuredIssueSlot");
+if (!slot) return;
+const latest = allIssues.find(item => sanitizeUrl(item.link));
+if (!latest) {
+slot.innerHTML = "";
+return;
+}
+
+const slug = `issue-${latest.id}`;
+const metaBadge = [latest.type || "Выпуск", latest.period].filter(Boolean).join(" • ");
+const rawDesc = (latest.desc || "").replace(/\s+/g, " ").trim();
+const shortDesc = rawDesc.length > 195 ? `${rawDesc.slice(0, 192).trim()}…` : rawDesc;
+
+slot.innerHTML = `
+<section class="featured-issue-banner" aria-label="Свежий выпуск номера">
+<div class="featured-issue-content">
+<div class="featured-issue-eyebrow">
+<span class="featured-pill">★ Свежий номер</span>
+<span class="featured-meta">${metaBadge}</span>
+</div>
+<h2 class="featured-issue-title">${latest.title}</h2>
+${shortDesc ? `<p class="featured-issue-desc">${shortDesc}</p>` : ""}
+</div>
+<div class="featured-issue-actions" id="featuredIssueActions"></div>
+</section>
+`;
+
+const actionsEl = document.getElementById("featuredIssueActions");
+
+const readBtn = document.createElement("button");
+readBtn.type = "button";
+readBtn.className = "featured-btn primary";
+readBtn.textContent = "Читать выпуск →";
+readBtn.onclick = () => openPdfReader(latest.title, latest.link, slug);
+actionsEl.appendChild(readBtn);
+
+const shareBtn = document.createElement("button");
+shareBtn.type = "button";
+shareBtn.className = "featured-btn secondary";
+shareBtn.textContent = "Поделиться";
+shareBtn.onclick = () => copyShareUrlToClipboard(slug, shareBtn, "Поделиться");
+actionsEl.appendChild(shareBtn);
+
+const allBtn = document.createElement("button");
+allBtn.type = "button";
+allBtn.className = "featured-btn ghost";
+allBtn.textContent = `Все выпуски (${allIssues.length})`;
+allBtn.onclick = () => {
+const issuesTab = document.querySelector('#mainTabs [data-mode="ISSUES"]');
+if (issuesTab) issuesTab.click();
+document.getElementById("mainTabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+actionsEl.appendChild(allBtn);
+}
 function buildQuotesPool(manualQuotes, articles) {
   if (manualQuotes.length > 0) return manualQuotes;
 
@@ -747,75 +819,93 @@ function renderNigunimSection(area, query) {
 }
 
 function buildCardElement(item, isIssue, animIndex) {
-  const card = document.createElement("article");
-  card.className = isIssue ? "card issue-card" : "card";
-  card.style.animationDelay = `${Math.min(animIndex * 55, 450)}ms`;
+const card = document.createElement("article");
+card.className = isIssue ? "card issue-card" : "card";
+card.style.animationDelay = `${Math.min(animIndex * 55, 450)}ms`;
 
-  const topWrapper = document.createElement("div");
+const topWrapper = document.createElement("div");
+const cardTop = document.createElement("div");
+cardTop.className = "card-top";
 
-  const cardTop = document.createElement("div");
-  cardTop.className = "card-top";
-  const leftSpan = document.createElement("span");
-  leftSpan.textContent = isIssue ? (item.type || "Выпуск") : (item.rubric || "Статья");
-  const rightSpan = document.createElement("span");
-  rightSpan.textContent = isIssue ? (item.period || "") : (item.author || "");
-  cardTop.append(leftSpan, rightSpan);
+const leftSpan = document.createElement("span");
+leftSpan.className = "card-top-badge";
+leftSpan.textContent = isIssue ? (item.type || "Выпуск") : (item.rubric || "Статья");
 
-  const cardBody = document.createElement("div");
-  cardBody.className = "card-body";
-  const titleEl = document.createElement("h2");
-  titleEl.className = "card-title";
-  titleEl.textContent = item.title;
-  cardBody.appendChild(titleEl);
+const rightSpan = document.createElement("span");
+rightSpan.className = "card-top-meta";
+rightSpan.textContent = isIssue ? (item.period || "") : (item.author || "");
 
-  if (item.desc) {
-    const descEl = document.createElement("p");
-    descEl.className = "card-desc";
-    descEl.textContent = item.desc;
-    cardBody.appendChild(descEl);
-  }
+cardTop.append(leftSpan, rightSpan);
 
-  topWrapper.append(cardTop, cardBody);
+const cardBody = document.createElement("div");
+cardBody.className = "card-body";
 
-  const cardFooter = document.createElement("div");
-  cardFooter.className = "card-footer";
+const titleEl = document.createElement("h2");
+titleEl.className = "card-title";
+titleEl.textContent = item.title;
+cardBody.appendChild(titleEl);
 
-  const actionsRow = document.createElement("div");
-  actionsRow.className = "card-footer-actions";
-
-  const safeLink = sanitizeUrl(item.link);
-  if (safeLink) {
-    const readBtn = document.createElement("button");
-    readBtn.type = "button";
-    readBtn.className = "read-btn";
-    readBtn.textContent = isIssue ? "Читать выпуск на сайте →" : "Читать материал →";
-    const slug = isIssue ? `issue-${item.id}` : `article-${item.id}`;
-    readBtn.onclick = () => openPdfReader(item.title, safeLink, slug);
-    actionsRow.appendChild(readBtn);
-  } else {
-    const stubEl = document.createElement("span");
-    stubEl.className = "read-btn";
-    stubEl.style.opacity = "0.5";
-    stubEl.style.cursor = "default";
-    stubEl.textContent = "Файл готовится";
-    actionsRow.appendChild(stubEl);
-  }
-
-  const safeAudio = !isIssue ? sanitizeUrl(item.audio) : "";
-  if (safeAudio) {
-    const listenBtn = document.createElement("button");
-    listenBtn.type = "button";
-    listenBtn.className = "listen-btn";
-    listenBtn.textContent = "♪ Слушать нигун";
-    listenBtn.onclick = () => openNigunPlayer(item.title, safeAudio);
-    actionsRow.appendChild(listenBtn);
-  }
-
-  cardFooter.appendChild(actionsRow);
-  card.append(topWrapper, cardFooter);
-  return card;
+if (item.desc) {
+const descEl = document.createElement("p");
+descEl.className = "card-desc";
+descEl.textContent = item.desc;
+cardBody.appendChild(descEl);
 }
 
+topWrapper.append(cardTop, cardBody);
+
+const cardFooter = document.createElement("div");
+cardFooter.className = "card-footer";
+
+const actionsRow = document.createElement("div");
+actionsRow.className = "card-footer-actions";
+
+const safeLink = sanitizeUrl(item.link);
+const slug = isIssue ? `issue-${item.id}` : `article-${item.id}`;
+
+if (safeLink) {
+const primaryRow = document.createElement("div");
+primaryRow.className = "card-primary-row";
+
+const readBtn = document.createElement("button");
+readBtn.type = "button";
+readBtn.className = "read-btn";
+readBtn.textContent = isIssue ? "Читать выпуск →" : "Читать материал →";
+readBtn.onclick = () => openPdfReader(item.title, safeLink, slug);
+
+const shareBtn = document.createElement("button");
+shareBtn.type = "button";
+shareBtn.className = "card-share-btn";
+shareBtn.title = "Скопировать прямую ссылку";
+shareBtn.setAttribute("aria-label", "Скопировать прямую ссылку");
+shareBtn.textContent = "Поделиться";
+shareBtn.onclick = () => copyShareUrlToClipboard(slug, shareBtn, "Поделиться");
+
+primaryRow.append(readBtn, shareBtn);
+actionsRow.appendChild(primaryRow);
+} else {
+const stubEl = document.createElement("span");
+stubEl.className = "read-btn";
+stubEl.style.opacity = "0.5";
+stubEl.style.cursor = "default";
+stubEl.textContent = "Файл готовится";
+actionsRow.appendChild(stubEl);
+}
+
+const safeAudio = !isIssue ? sanitizeUrl(item.audio) : "";
+if (safeAudio) {
+const listenBtn = document.createElement("button");
+listenBtn.type = "button";
+listenBtn.className = "listen-btn";
+listenBtn.textContent = "♪ Слушать нигун к статье";
+listenBtn.onclick = () => openNigunPlayer(item.title, safeAudio);
+actionsRow.appendChild(listenBtn);
+}
+
+cardFooter.appendChild(actionsRow);
+card.append(topWrapper, cardFooter);
+return card;
+}
 function renderNewsSection(area, query) {
   area.innerHTML = "";
 
@@ -1203,9 +1293,11 @@ async function init() {
           }));
       }
     }
-    allQuotes = buildQuotesPool(manualQuotes, allArticles);
-    renderDailyQuote();
+allQuotes = buildQuotesPool(manualQuotes, allArticles);
 
+renderFeaturedIssue();
+
+renderDailyQuote();
     setupFilters(allArticles);
     renderContent();
     handleHashNavigation();
