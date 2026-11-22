@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-22 17:31 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-22 17:34 UTC_
 
 ---
 
@@ -4318,7 +4318,9 @@ async function init() {
     }
 allQuotes = buildQuotesPool(manualQuotes, allArticles);
 
-renderDailyQuote();
+    renderFeaturedIssue();
+    renderCalendarContextWidget();
+    renderDailyQuote();
     setupFilters(allArticles);
     renderContent();
     handleHashNavigation();
