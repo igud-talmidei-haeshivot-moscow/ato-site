@@ -2240,3 +2240,91 @@ body.player-open footer {
   box-shadow: 0 0 0 4px rgba(10, 116, 218, 0.18), 0 12px 28px -8px rgba(10, 116, 218, 0.25);
   transition: all 0.35s ease;
 }
+/* Профиль автора и кликабельный тег в карточке */
+.author-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--blue-accent);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(10, 116, 218, 0.45);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.author-link-btn:hover {
+  color: var(--navy-deep);
+  border-bottom-color: var(--navy-deep);
+}
+
+.author-profile-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.35rem;
+  padding: 1rem 1.35rem;
+  background: linear-gradient(135deg, #FFFFFF 0%, #EEF5FD 100%);
+  border: 1.5px solid #B6D2F2;
+  border-left: 5px solid var(--navy-deep);
+  border-radius: 13px;
+  box-shadow: 0 6px 20px -8px rgba(7, 22, 43, 0.12);
+  animation: fadeSlideUp 0.35s ease-out both;
+}
+
+.author-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.author-profile-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--blue-accent);
+}
+
+.author-profile-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--navy-deep);
+  line-height: 1.15;
+}
+
+.author-profile-stats {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.author-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .author-profile-bar {
+    padding: 0.9rem 1rem;
+  }
+
+  .author-profile-actions {
+    width: 100%;
+  }
+
+  .author-profile-actions .quote-btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}
