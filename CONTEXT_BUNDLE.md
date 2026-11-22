@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-22 17:30 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-22 17:31 UTC_
 
 ---
 
@@ -4318,8 +4318,6 @@ async function init() {
     }
 allQuotes = buildQuotesPool(manualQuotes, allArticles);
 
-renderFeaturedIssue();
-renderCalendarContextWidget();
 renderDailyQuote();
     setupFilters(allArticles);
     renderContent();
@@ -4327,8 +4325,20 @@ renderDailyQuote();
   } catch (err) {
     console.error("Ошибка init():", err);
     area.innerHTML = '<div class="status-box">Не удалось загрузить данные. Проверьте публикацию листов в интернет.</div>';
+  } finally {
+    hideAtoPreloader();
   }
 }
+
+function hideAtoPreloader() {
+  const preloader = document.getElementById("atoPreloader");
+  if (!preloader || preloader.classList.contains("hidden")) return;
+  preloader.classList.add("hidden");
+  setTimeout(() => preloader.remove(), 500);
+}
+
+// Предохранитель: убираем прелоадер не позднее 2.5 сек даже при медленной сети
+setTimeout(hideAtoPreloader, 2500);
 let currentJewishContext = null;
 
 const PARASHA_RU_MAP = {
