@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-22 16:05 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-22 16:23 UTC_
 
 ---
 
@@ -2457,6 +2457,20 @@ function handleHashNavigation() {
       playNigunFromList(item, allNigunim);
     }
   }
+  const quoteMatch = hash.match(/^quote-(\d+)$/i);
+  if (quoteMatch) {
+    const targetId = parseInt(quoteMatch[1], 10);
+    const qIdx = allQuotes.findIndex(q => q.id === targetId);
+    if (qIdx !== -1) {
+      renderDailyQuote(false, qIdx);
+      const quoteBox = document.querySelector(".daily-quote-box");
+      if (quoteBox) {
+        quoteBox.classList.add("quote-highlighted");
+        quoteBox.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => quoteBox.classList.remove("quote-highlighted"), 2600);
+      }
+    }
+  }
 }
 
 document.getElementById("pdfCloseBtn").addEventListener("click", closePdfReader);
@@ -2655,7 +2669,8 @@ function buildQuotesPool(manualQuotes, articles) {
 
   return articles
     .filter(a => a.rubric.toLowerCase() === "суть томима" && a.desc)
-    .map(a => ({
+    .map((a, idx) => ({
+      id: idx + 1,
       text: a.desc,
       source: a.author ? `«${a.title}» • ${a.author}` : `«${a.title}»`,
       title: a.title,
@@ -2664,11 +2679,13 @@ function buildQuotesPool(manualQuotes, articles) {
     }));
 }
 
-function renderDailyQuote(excludeCurrent = false) {
+function renderDailyQuote(excludeCurrent = false, forcedIndex = null) {
   const slot = document.getElementById("dailyQuoteSlot");
   if (!slot || allQuotes.length === 0) return;
 
-  if (allQuotes.length === 1) {
+  if (forcedIndex !== null && forcedIndex >= 0 && forcedIndex < allQuotes.length) {
+    currentQuoteIndex = forcedIndex;
+  } else if (allQuotes.length === 1) {
     currentQuoteIndex = 0;
   } else {
     let nextIndex = Math.floor(Math.random() * allQuotes.length);
@@ -2679,9 +2696,13 @@ function renderDailyQuote(excludeCurrent = false) {
   }
 
   const item = allQuotes[currentQuoteIndex];
-  const shareUrl = item.articleId
-    ? `${window.location.origin}${window.location.pathname}#article-${item.articleId}`
-    : `${window.location.origin}${window.location.pathname}`;
+  const quoteSlug = `quote-${item.id || currentQuoteIndex + 1}`;
+  const baseUrl = `${window.location.origin}${window.location.pathname}`;
+  const quoteShareUrl = `${baseUrl}#${quoteSlug}`;
+
+  if (forcedIndex !== null || /^#quote-\d+$/i.test(window.location.hash)) {
+    history.replaceState(null, "", `#${quoteSlug}`);
+  }
 
   slot.innerHTML = `
     <section class="daily-quote-box" aria-label="Быть Томимом каждый день">
@@ -2716,10 +2737,10 @@ function renderDailyQuote(excludeCurrent = false) {
   shareBtn.className = "quote-btn";
   shareBtn.textContent = "Поделиться цитатой";
   shareBtn.onclick = async () => {
-    const shareText = `«${item.text.replace(/^[«"]|[»"]$/g, "")}»\n\n— ${item.source} (Сообщество АТО • Москва)\nЧитать полностью: ${shareUrl}`;
+    const shareText = `«${item.text.replace(/^[«"]|[»"]$/g, "")}»\n\n— ${item.source} (Сообщество АТО • Москва)\nОткрыть цитату на сайте: ${quoteShareUrl}`;
     try {
       await navigator.clipboard.writeText(shareText);
-      shareBtn.textContent = "Цитата скопирована ✓";
+      shareBtn.textContent = "Ссылка и цитата скопированы ✓";
       setTimeout(() => { shareBtn.textContent = "Поделиться цитатой"; }, 2200);
     } catch (e) {
       prompt("Скопируйте цитату для отправки:", shareText);
@@ -3618,7 +3639,8 @@ async function init() {
         const rows = parseCSV(await resQuotes.text());
         manualQuotes = rows.slice(1)
           .filter(r => r[0])
-          .map(r => ({
+          .map((r, i) => ({
+            id: i + 1,
             text: r[0] || "",
             source: r[1] || "Сообщество АТО",
             title: r[1] || "Статья АТО",
