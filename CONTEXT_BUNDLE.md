@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-22 16:32 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-22 16:37 UTC_
 
 ---
 
@@ -2837,6 +2837,33 @@ function updateActiveTrackHighlight() {
   });
 }
 
+const NIGUN_ARTICLE_ALIASES = {
+  "mitteler rebbe's kaplye": "дем миттелер ребес капела"
+};
+
+function resolveNigunArticle(track) {
+  if (!track) return null;
+  const rawLink = sanitizeUrl(track.articleLink);
+  const normTitle = (track.title || "").toLowerCase().trim();
+  const aliasTitle = NIGUN_ARTICLE_ALIASES[normTitle] || normTitle;
+
+  const matchedArticle = allArticles.find(a => {
+    const aLink = sanitizeUrl(a.link);
+    if (rawLink && aLink && rawLink === aLink) return true;
+    const aTitle = (a.title || "").toLowerCase().trim();
+    return aTitle && (aTitle === normTitle || aTitle === aliasTitle);
+  });
+
+  const finalUrl = rawLink || (matchedArticle ? sanitizeUrl(matchedArticle.link) : "");
+  if (!finalUrl) return null;
+
+  return {
+    url: finalUrl,
+    title: matchedArticle ? matchedArticle.title : (track.title || "Статья о нигуне"),
+    slug: matchedArticle ? `article-${matchedArticle.id}` : ""
+  };
+}
+
 function playTrackObject(track) {
   if (!track) return;
   const src = resolveAudioSrc(track.audio);
@@ -2865,14 +2892,15 @@ function playTrackObject(track) {
     downloadBtn.setAttribute("download", `${(track.title || "nigun").replace(/[\\/:*?"<>|]/g, "_")}.mp3`);
   }
 
-  const safeArticle = sanitizeUrl(track.articleLink);
+const resolvedArticle = resolveNigunArticle(track);
   if (articleEl) {
-    if (safeArticle) {
+    if (resolvedArticle) {
       articleEl.style.display = "inline-block";
-      articleEl.href = safeArticle;
+      articleEl.href = resolvedArticle.url;
+      articleEl.title = `Открыть статью: ${resolvedArticle.title}`;
       articleEl.onclick = (e) => {
         e.preventDefault();
-        openPdfReader(track.title, safeArticle, "");
+        openPdfReader(resolvedArticle.title, resolvedArticle.url, resolvedArticle.slug);
       };
     } else {
       articleEl.style.display = "none";
@@ -3225,19 +3253,19 @@ function renderNigunimSection(area, query) {
       actionsWrap.appendChild(tagEl);
     }
 
-    const safeArticle = sanitizeUrl(item.articleLink);
-    if (safeArticle) {
+const resolvedArticle = resolveNigunArticle(item);
+    if (resolvedArticle) {
       const artBtn = document.createElement("button");
       artBtn.type = "button";
       artBtn.className = "nigun-row-article";
+      artBtn.title = `Читать статью: ${resolvedArticle.title}`;
       artBtn.textContent = "Статья →";
       artBtn.onclick = (e) => {
         e.stopPropagation();
-        openPdfReader(item.title, safeArticle, "");
+        openPdfReader(resolvedArticle.title, resolvedArticle.url, resolvedArticle.slug);
       };
       actionsWrap.appendChild(artBtn);
     }
-
    const shareBtn = document.createElement("button");
     shareBtn.type = "button";
     shareBtn.className = "nigun-row-share";
