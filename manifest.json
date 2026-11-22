@@ -1,0 +1,26 @@
+{
+  "name": "Сообщество АТО • Москва (תשפ״ז)",
+  "short_name": "АТО Москва",
+  "description": "Игуд Талмидей а-Ешивот Москва • Архив журналов «Кунтрес Тмимим», койвецов, нигуним и новости ешивы.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F3F7FC",
+  "theme_color": "#07162B",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
