@@ -2518,6 +2518,22 @@ body.player-open footer {
     text-align: center;
   }
 }
+.author-top-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(100, 181, 246, 0.45);
+  border-radius: 6px;
+  padding: 0.12rem 0.5rem;
+  font: inherit;
+  color: #E6EFFA;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.author-top-btn:hover {
+  background: var(--blue-accent);
+  border-color: #90CAF9;
+  color: #FFFFFF;
+}
 ```
 
 ## Файл: `app.js`
