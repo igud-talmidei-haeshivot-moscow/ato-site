@@ -156,16 +156,46 @@
     </div>
   </div>
 
-  <footer>
-    <div class="container footer-inner">
-      <div>© Сообщество АТО • Томхей Тмимим Москва • תשפ״ז</div>
-      <div>
-        Новостной канал: <a href="https://t.me/Igud_Talmidei_Haeshivot_5787" target="_blank" rel="noopener">@Igud_Talmidei_Haeshivot_5787</a>
-        &nbsp;•&nbsp;
-        Аккаунт: <a href="https://t.me/ATO_Moscow" target="_blank" rel="noopener">@ATO_Moscow</a>
+ <footer>
+    <div class="container footer-layout">
+      <div class="footer-socials">
+        <a href="https://t.me/Igud_Talmidei_Haeshivot_5787" target="_blank" rel="noopener" class="footer-social-btn" title="Официальный Telegram-канал АТО" aria-label="Telegram-канал АТО">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+          <span>Канал АТО</span>
+        </a>
+        <a href="https://t.me/ATO_Moscow" target="_blank" rel="noopener" class="footer-social-btn" title="Связаться с редакцией @ATO_Moscow" aria-label="Связаться с редакцией">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Редакция @ATO_Moscow</span>
+        </a>
+      </div>
+
+      <nav class="footer-legal-links" aria-label="Правовая информация и регламент">
+        <button type="button" class="footer-doc-btn" data-doc="privacy">Политика конфиденциальности</button>
+        <button type="button" class="footer-doc-btn" data-doc="terms">Условия использования материалов</button>
+        <button type="button" class="footer-doc-btn" data-doc="support">О поддержке проектов</button>
+        <button type="button" class="footer-doc-btn" data-doc="about_org">О редакции и контакты</button>
+      </nav>
+
+      <div class="footer-caption">
+        Некоммерческий образовательно-издательский проект сообщества учеников ешивы <strong>«Игуд Талмидей а-Ешивот Москва» (АТО) • תשפ״ז</strong>.
+        Материалы сайта предназначены для изучения Торы и Хасидута. Контакты редакции: <a href="https://t.me/ATO_Moscow" target="_blank" rel="noopener">@ATO_Moscow</a>.
       </div>
     </div>
   </footer>
+
+  <!-- Модальное окно правовых и редакционных документов -->
+  <div class="legal-modal" id="legalModal" role="dialog" aria-modal="true" aria-labelledby="legalModalTitle">
+    <div class="legal-dialog">
+      <div class="legal-toolbar">
+        <div class="legal-title-wrap">
+          <span class="diamond"></span>
+          <h2 class="legal-title" id="legalModalTitle">Документ</h2>
+        </div>
+        <button type="button" id="legalCloseBtn" class="pdf-close-btn" aria-label="Закрыть окно">Закрыть ✕</button>
+      </div>
+      <div class="legal-body" id="legalModalBody"></div>
+    </div>
+  </div>
 <div id="nigunPlayerBar" class="nigun-player-bar" aria-label="Плеер нигуна">
     <div class="nigun-player-inner">
       <div class="nigun-player-info">
