@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-22 16:58 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-22 17:02 UTC_
 
 ---
 
@@ -2760,7 +2760,7 @@ function handleHashNavigation() {
     return;
   }
 
-const nigunMatch = hash.match(/^nigun-(\d+)$/i);
+  const nigunMatch = hash.match(/^nigun-(\d+)$/i);
   if (nigunMatch) {
     const idx = parseInt(nigunMatch[1], 10) - 1;
     const item = allNigunim[idx];
@@ -2772,6 +2772,22 @@ const nigunMatch = hash.match(/^nigun-(\d+)$/i);
       renderRubricSubBar(allArticles);
       renderContent();
       playNigunFromList(item, allNigunim);
+    }
+    return;
+  }
+
+  const quoteMatch = hash.match(/^quote-(\d+)$/i);
+  if (quoteMatch) {
+    const idx = parseInt(quoteMatch[1], 10) - 1;
+    if (allQuotes[idx]) {
+      currentQuoteIndex = idx;
+      renderDailyQuote(false);
+      const slot = document.getElementById("dailyQuoteSlot");
+      if (slot) {
+        slot.scrollIntoView({ behavior: "smooth", block: "center" });
+        slot.classList.add("quote-highlight");
+        setTimeout(() => slot.classList.remove("quote-highlight"), 2200);
+      }
     }
     return;
   }
