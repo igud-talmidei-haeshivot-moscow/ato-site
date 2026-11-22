@@ -2327,6 +2327,13 @@ body.player-open footer {
     text-align: center;
   }
 }
+/* Подсветка цитаты при переходе по прямой ссылке #quote-{id} */
+.daily-quote-box.quote-highlighted {
+  border-color: var(--blue-accent);
+  background: linear-gradient(135deg, #EBF4FF 0%, #FFFFFF 100%);
+  box-shadow: 0 0 0 4px rgba(10, 116, 218, 0.18), 0 12px 28px -8px rgba(10, 116, 218, 0.25);
+  transition: all 0.35s ease;
+}
 ```
 
 ## Файл: `app.js`
