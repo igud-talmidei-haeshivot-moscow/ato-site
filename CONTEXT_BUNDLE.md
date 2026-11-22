@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-22 16:37 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-22 16:41 UTC_
 
 ---
 
@@ -2111,8 +2111,18 @@ body.player-open footer {
 }
 
 @media (max-width: 768px) {
+  .main-tabs {
+    gap: 0.35rem;
+  }
+
+  .main-tabs .filter-btn {
+    padding: 0.42rem 0.72rem;
+    font-size: 0.84rem;
+  }
+
   .nigun-row {
     grid-template-columns: 36px 1fr auto;
+    gap: 0.55rem;
     padding: 0.6rem 0.75rem;
   }
 
@@ -2124,12 +2134,65 @@ body.player-open footer {
     display: none;
   }
 
+  .nigun-player-bar {
+    padding: 0.6rem 0.85rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .nigun-player-inner {
-    gap: 0.55rem;
+    gap: 0.45rem 0.6rem;
+  }
+
+  .nigun-player-info {
+    flex: 1 1 calc(100% - 96px);
+    min-width: 0;
+  }
+
+  .nigun-player-right {
+    margin-left: auto;
+  }
+
+  .nigun-controls-center {
+    flex: 1 1 100%;
+    order: 3;
   }
 
   body.player-open .scroll-top-btn {
-    bottom: 7.5rem;
+    bottom: calc(8.75rem + env(safe-area-inset-bottom, 0px));
+    right: 1rem;
+  }
+
+  body.player-open footer {
+    padding-bottom: calc(9.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 480px) {
+  .nigun-row {
+    grid-template-columns: 36px 1fr;
+    row-gap: 0.5rem;
+  }
+
+  .nigun-row-title {
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  .nigun-row-actions {
+    grid-column: 2;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .nigun-row-tag {
+    display: none;
+  }
+
+  .nigun-transport {
+    gap: 0.4rem;
+  }
+
+  body.player-open .scroll-top-btn {
+    bottom: calc(9.5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 /* Витрина «Свежий выпуск номера» */
