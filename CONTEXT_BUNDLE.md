@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-23 18:00 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-23 18:10 UTC_
 
 ---
 
@@ -77,10 +77,11 @@ _Автоматически собрано из ветки `main`: 2026-11-23 18
 
   <div class="zmanim-bar">
     <div class="container zmanim-inner">
-      <div class="zmanim-city">
-        <span class="live-dot"></span>
-        <span>Зманим • Москва</span>
-      </div>
+    <div class="zmanim-city">
+  <span class="live-dot"></span>
+  <span>Зманим • Москва</span>
+  <span id="zmanimHebrewDate" class="zmanim-hebrew-date"></span>
+</div>
       <div class="zmanim-times">
         <div class="zmanim-item">
           <span>Зажигание свечей:</span>
