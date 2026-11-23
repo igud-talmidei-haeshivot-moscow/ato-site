@@ -385,7 +385,7 @@ document.getElementById("mainTabs")?.scrollIntoView({ behavior: "smooth", block:
 actionsEl.appendChild(allBtn);
 }
 function buildQuotesPool(manualQuotes, articles) {
-  const HEBREW_MONTHS_RU = {
+const HEBREW_MONTHS_RU = {
   nisan: "Нисана", iyyar: "Ияра", sivan: "Сивана", tamuz: "Тамуза",
   av: "Ава", elul: "Элула", tishrei: "Тишрея", cheshvan: "Хешвана",
   kislev: "Кислева", tevet: "Тевета", shvat: "Швата", adar: "Адара",
@@ -417,10 +417,12 @@ function normalizeCalendarTag(raw) {
   return (raw || "")
     .toLowerCase()
     .replace(/parshat\s+/g, "parashat ")
+    .replace(/vayeira/g, "vayera")
+    .replace(/vayetzei/g, "vayetze")
     .replace(/heshvan/g, "cheshvan")
     .replace(/kislew/g, "kislev")
     .replace(/teves/g, "tevet")
-    .replace(/shevat/g, "shvat")
+    .replace(/sh'vat|shevat/g, "shvat")
     .replace(/tishri/g, "tishrei")
     .replace(/\s+/g, " ")
     .trim();
@@ -447,9 +449,17 @@ async function renderCalendarContextWidget() {
     const weekEndYMD = getMskDateYMD(7);
     const [gy, gm, gd] = todayYMD.split("-");
 
-    const [convRes, calRes] = await Promise.all([
+    const upcomingRequests = [1, 2, 3, 4, 5, 6].map(offset => {
+      const [ny, nm, nd] = getMskDateYMD(offset).split("-");
+      return fetch(`https://www.hebcal.com/converter?cfg=json&gy=${ny}&gm=${nm}&gd=${nd}&g2h=1`)
+        .then(r => (r.ok ? r.json() : null))
+        .catch(() => null);
+    });
+
+    const [convRes, calRes, ...upcomingResults] = await Promise.all([
       fetch(`https://www.hebcal.com/converter?cfg=json&gy=${gy}&gm=${gm}&gd=${gd}&g2h=1`),
-      fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&chabad=on&s=on&geonameid=524901&start=${todayYMD}&end=${weekEndYMD}`)
+      fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&chabad=on&s=on&geonameid=524901&start=${todayYMD}&end=${weekEndYMD}`),
+      ...upcomingRequests
     ]);
 
     if (!convRes.ok) return;
@@ -460,18 +470,15 @@ async function renderCalendarContextWidget() {
     const todayTag = `${hd} ${hmNorm}`;
     const monthTag = `month ${hmNorm}`;
 
-    // Собираем ближайшие даты (на 5 дней вперёд), текущую главу и праздники
     const upcomingDateTags = new Map();
-    for (let offset = 1; offset <= 5; offset++) {
-      const [ny, nm, nd] = getMskDateYMD(offset).split("-");
-      const nextRes = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${ny}&gm=${nm}&gd=${nd}&g2h=1`);
-      if (nextRes.ok) {
-        const nextData = await nextRes.json();
-        const nhm = normalizeCalendarTag(nextData.hm || "");
-        const nTag = `${nextData.hd} ${nhm}`;
+    upcomingResults.forEach(nextData => {
+      if (!nextData || !nextData.hd || !nextData.hm) return;
+      const nhm = normalizeCalendarTag(nextData.hm);
+      const nTag = `${nextData.hd} ${nhm}`;
+      if (nTag !== todayTag && !upcomingDateTags.has(nTag)) {
         upcomingDateTags.set(nTag, `${nextData.hd} ${HEBREW_MONTHS_RU[nhm] || nextData.hm}`);
       }
-    }
+    });
 
     let currentParashaTag = "";
     let currentParashaRu = "";
@@ -599,6 +606,8 @@ async function renderCalendarContextWidget() {
     slot.innerHTML = "";
   }
 }
+
+function buildQuotesPool(manualQuotes, articles) {
   if (manualQuotes.length > 0) return manualQuotes;
 
   return articles
