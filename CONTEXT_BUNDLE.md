@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-23 15:13 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-23 15:14 UTC_
 
 ---
 
@@ -3508,6 +3508,220 @@ document.getElementById("mainTabs")?.scrollIntoView({ behavior: "smooth", block:
 actionsEl.appendChild(allBtn);
 }
 function buildQuotesPool(manualQuotes, articles) {
+  const HEBREW_MONTHS_RU = {
+  nisan: "Нисана", iyyar: "Ияра", sivan: "Сивана", tamuz: "Тамуза",
+  av: "Ава", elul: "Элула", tishrei: "Тишрея", cheshvan: "Хешвана",
+  kislev: "Кислева", tevet: "Тевета", shvat: "Швата", adar: "Адара",
+  "adar i": "Адара I", "adar ii": "Адара II"
+};
+
+const PARASHA_RU_MAP = {
+  "parashat bereshit": "Берешит", "parashat noach": "Ноах", "parashat lech-lecha": "Лех-Леха",
+  "parashat vayera": "Ваера", "parashat chayei sara": "Хаей Сара", "parashat toldot": "Толдот",
+  "parashat vayetze": "Ваеце", "parashat vayishlach": "Ваишлах", "parashat vayeshev": "Ваешев",
+  "parashat miketz": "Микец", "parashat vayigash": "Ваигаш", "parashat vayechi": "Ваехи",
+  "parashat shemot": "Шмот", "parashat vaera": "Ваэра", "parashat bo": "Бо",
+  "parashat beshalach": "Бешалах", "parashat yitro": "Итро", "parashat mishpatim": "Мишпатим",
+  "parashat terumah": "Трума", "parashat tetzaveh": "Тецаве", "parashat ki tisa": "Ки Тиса",
+  "parashat vayakhel": "Ваякгель", "parashat pekudei": "Пкудей", "parashat vayikra": "Ваикра",
+  "parashat tzav": "Цав", "parashat shmini": "Шмини", "parashat tazria": "Тазриа",
+  "parashat metzora": "Мецора", "parashat achrei mot": "Ахарей Мот", "parashat kedoshim": "Кдошим",
+  "parashat emor": "Эмор", "parashat behar": "Бегар", "parashat bechukotai": "Бехукотай",
+  "parashat bamidbar": "Бемидбар", "parashat naso": "Насо", "parashat beha'alotcha": "Бегаалотха",
+  "parashat sh'lach": "Шлах", "parashat korach": "Корах", "parashat chukat": "Хукат",
+  "parashat balak": "Балак", "parashat pinchas": "Пинхас", "parashat matot": "Матот",
+  "parashat masei": "Масей", "parashat devarim": "Дварим", "parashat vaetchanan": "Ваэтханан",
+  "parashat eikev": "Экев", "parashat re'eh": "Рээ", "parashat shoftim": "Шофтим",
+  "parashat ki teitzei": "Ки Теце", "parashat ki tavo": "Ки Таво", "parashat nitzavim": "Ницавим",
+  "parashat vayeilech": "Ваелех", "parashat ha'azinu": "Гаазину", "parashat vezot haberakhah": "Везот Габраха"
+};
+
+function normalizeCalendarTag(raw) {
+  return (raw || "")
+    .toLowerCase()
+    .replace(/parshat\s+/g, "parashat ")
+    .replace(/heshvan/g, "cheshvan")
+    .replace(/kislew/g, "kislev")
+    .replace(/teves/g, "tevet")
+    .replace(/shevat/g, "shvat")
+    .replace(/tishri/g, "tishrei")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getMskDateYMD(offsetDays = 0) {
+  const d = new Date(Date.now() + offsetDays * 86400000);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Moscow",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(d);
+  const map = Object.fromEntries(parts.map(p => [p.type, p.value]));
+  return `${map.year}-${map.month}-${map.day}`;
+}
+
+async function renderCalendarContextWidget() {
+  const slot = document.getElementById("calendarContextSlot");
+  if (!slot) return;
+
+  try {
+    const todayYMD = getMskDateYMD(0);
+    const weekEndYMD = getMskDateYMD(7);
+    const [gy, gm, gd] = todayYMD.split("-");
+
+    const [convRes, calRes] = await Promise.all([
+      fetch(`https://www.hebcal.com/converter?cfg=json&gy=${gy}&gm=${gm}&gd=${gd}&g2h=1`),
+      fetch(`https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&chabad=on&s=on&geonameid=524901&start=${todayYMD}&end=${weekEndYMD}`)
+    ]);
+
+    if (!convRes.ok) return;
+    const convData = await convRes.json();
+
+    const hmNorm = normalizeCalendarTag(convData.hm || "");
+    const hd = convData.hd;
+    const todayTag = `${hd} ${hmNorm}`;
+    const monthTag = `month ${hmNorm}`;
+
+    // Собираем ближайшие даты (на 5 дней вперёд), текущую главу и праздники
+    const upcomingDateTags = new Map();
+    for (let offset = 1; offset <= 5; offset++) {
+      const [ny, nm, nd] = getMskDateYMD(offset).split("-");
+      const nextRes = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${ny}&gm=${nm}&gd=${nd}&g2h=1`);
+      if (nextRes.ok) {
+        const nextData = await nextRes.json();
+        const nhm = normalizeCalendarTag(nextData.hm || "");
+        const nTag = `${nextData.hd} ${nhm}`;
+        upcomingDateTags.set(nTag, `${nextData.hd} ${HEBREW_MONTHS_RU[nhm] || nextData.hm}`);
+      }
+    }
+
+    let currentParashaTag = "";
+    let currentParashaRu = "";
+    const holidayTags = new Set();
+
+    if (calRes.ok) {
+      const calData = await calRes.json();
+      for (const ev of (calData.items || [])) {
+        const normTitle = normalizeCalendarTag(ev.title || "");
+        if (ev.category === "parashat" && !currentParashaTag) {
+          currentParashaTag = normTitle;
+          currentParashaRu = PARASHA_RU_MAP[normTitle] || ev.title.replace(/^Parashat\s+/i, "");
+        }
+        if (ev.category === "holiday") {
+          holidayTags.add(normTitle);
+          if (normTitle.includes("chanukah")) holidayTags.add("chanukah");
+          if (normTitle.includes("sukkot")) holidayTags.add("sukkot");
+          if (normTitle.includes("yom kippur")) holidayTags.add("yom kippur");
+        }
+      }
+    }
+
+    const pool = [
+      ...allIssues.map(item => ({
+        isIssue: true,
+        id: item.id,
+        title: item.title,
+        sub: [item.type || "Выпуск", item.period].filter(Boolean).join(" • "),
+        link: item.link,
+        tags: (item.calendarTags || "").split(",").map(normalizeCalendarTag).filter(Boolean)
+      })),
+      ...allArticles.map(item => ({
+        isIssue: false,
+        id: item.id,
+        title: item.title,
+        sub: [item.rubric, item.author].filter(Boolean).join(" • "),
+        link: item.link,
+        tags: (item.calendarTags || "").split(",").map(normalizeCalendarTag).filter(Boolean)
+      }))
+    ].filter(x => x.tags.length > 0 && sanitizeUrl(x.link));
+
+    const matched = [];
+    const usedKeys = new Set();
+
+    const tryAddMatch = (item, badgeText, priority) => {
+      const key = `${item.isIssue ? "I" : "A"}-${item.id}`;
+      if (usedKeys.has(key)) return;
+      usedKeys.add(key);
+      matched.push({ ...item, badgeText, priority });
+    };
+
+    const todayRuLabel = `${hd} ${HEBREW_MONTHS_RU[hmNorm] || convData.hm}`;
+
+    pool.forEach(item => {
+      if (item.tags.includes(todayTag)) {
+        tryAddMatch(item, `Сегодня • ${todayRuLabel}`, 1);
+      }
+      if (currentParashaTag && item.tags.includes(currentParashaTag)) {
+        tryAddMatch(item, `Недельная глава • ${currentParashaRu}`, 2);
+      }
+      for (const hTag of holidayTags) {
+        if (item.tags.includes(hTag)) {
+          tryAddMatch(item, "Праздник / Дата недели", 2);
+        }
+      }
+      for (const [uTag, uRu] of upcomingDateTags.entries()) {
+        if (item.tags.includes(uTag)) {
+          tryAddMatch(item, `Скоро • ${uRu}`, 3);
+        }
+      }
+      if (item.tags.includes(monthTag)) {
+        tryAddMatch(item, `Месяц ${HEBREW_MONTHS_RU[hmNorm] || convData.hm}`, 4);
+      }
+    });
+
+    if (matched.length === 0) {
+      slot.innerHTML = "";
+      return;
+    }
+
+    matched.sort((a, b) => a.priority - b.priority);
+    const topItems = matched.slice(0, 3);
+
+    const metaParts = [todayRuLabel];
+    if (currentParashaRu) metaParts.push(`Глава ${currentParashaRu}`);
+
+    slot.innerHTML = `
+      <section class="calendar-context-box" aria-label="Актуально к дате и неделе">
+        <div class="calendar-context-header">
+          <div class="calendar-context-title">
+            <span class="diamond"></span>
+            <span>Актуально к дате и неделе</span>
+          </div>
+          <div class="calendar-context-meta">${metaParts.join(" • ")}</div>
+        </div>
+        <div class="calendar-context-grid" id="calendarContextGrid"></div>
+      </section>
+    `;
+
+    const gridEl = document.getElementById("calendarContextGrid");
+    topItems.forEach(item => {
+      const card = document.createElement("article");
+      card.className = "calendar-item-card";
+
+      const slug = item.isIssue ? `issue-${item.id}` : `article-${item.id}`;
+      card.innerHTML = `
+        <div>
+          <span class="calendar-item-badge">${item.badgeText}</span>
+          <h3 class="calendar-item-title">${item.title}</h3>
+          ${item.sub ? `<div class="calendar-item-sub">${item.sub}</div>` : ""}
+        </div>
+      `;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "calendar-item-btn";
+      btn.textContent = item.isIssue ? "Открыть выпуск →" : "Читать статью →";
+      btn.onclick = () => openPdfReader(item.title, item.link, slug);
+
+      card.appendChild(btn);
+      gridEl.appendChild(card);
+    });
+  } catch (err) {
+    console.warn("Calendar context widget skipped:", err);
+    slot.innerHTML = "";
+  }
+}
   if (manualQuotes.length > 0) return manualQuotes;
 
   return articles
