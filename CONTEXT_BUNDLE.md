@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-23 18:10 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-23 18:12 UTC_
 
 ---
 
@@ -3481,7 +3481,8 @@ function getMskDateYMD(offsetDays = 0) {
 
 async function renderCalendarContextWidget() {
   const slot = document.getElementById("calendarContextSlot");
-  if (!slot) return;
+  const zmanimDateEl = document.getElementById("zmanimHebrewDate");
+  if (!slot && !zmanimDateEl) return;
 
   try {
     const todayYMD = getMskDateYMD(0);
@@ -3508,6 +3509,7 @@ async function renderCalendarContextWidget() {
     const hd = convData.hd;
     const todayTag = `${hd} ${hmNorm}`;
     const monthTag = `month ${hmNorm}`;
+    const todayRuLabel = `${hd} ${HEBREW_MONTHS_RU[hmNorm] || convData.hm}`;
 
     const upcomingDateTags = new Map();
     upcomingResults.forEach(nextData => {
@@ -3540,6 +3542,15 @@ async function renderCalendarContextWidget() {
       }
     }
 
+    // Показываем еврейскую дату и главу недели в верхней плашке Зманим всегда
+    if (zmanimDateEl) {
+      const metaParts = [todayRuLabel];
+      if (currentParashaRu) metaParts.push(`Глава ${currentParashaRu}`);
+      zmanimDateEl.textContent = metaParts.join(" • ");
+    }
+
+    if (!slot) return;
+
     const pool = [
       ...allIssues.map(item => ({
         isIssue: true,
@@ -3569,27 +3580,32 @@ async function renderCalendarContextWidget() {
       matched.push({ ...item, badgeText, priority });
     };
 
-    const todayRuLabel = `${hd} ${HEBREW_MONTHS_RU[hmNorm] || convData.hm}`;
-
     pool.forEach(item => {
+      const titleLower = (item.title || "").toLowerCase();
+
       if (item.tags.includes(todayTag)) {
-        tryAddMatch(item, `Сегодня • ${todayRuLabel}`, 1);
+        const badge = titleLower.includes(todayRuLabel.toLowerCase()) ? "Сегодня" : `Сегодня • ${todayRuLabel}`;
+        tryAddMatch(item, badge, 1);
       }
       if (currentParashaTag && item.tags.includes(currentParashaTag)) {
-        tryAddMatch(item, `Недельная глава • ${currentParashaRu}`, 2);
+        const badge = (currentParashaRu && titleLower.includes(currentParashaRu.toLowerCase()))
+          ? "Глава недели"
+          : `Глава ${currentParashaRu}`;
+        tryAddMatch(item, badge, 2);
       }
       for (const hTag of holidayTags) {
         if (item.tags.includes(hTag)) {
-          tryAddMatch(item, "Праздник / Дата недели", 2);
+          tryAddMatch(item, "К празднику", 2);
         }
       }
       for (const [uTag, uRu] of upcomingDateTags.entries()) {
         if (item.tags.includes(uTag)) {
-          tryAddMatch(item, `Скоро • ${uRu}`, 3);
+          const badge = titleLower.includes(uRu.toLowerCase()) ? "Скоро" : uRu;
+          tryAddMatch(item, badge, 3);
         }
       }
       if (item.tags.includes(monthTag)) {
-        tryAddMatch(item, `Месяц ${HEBREW_MONTHS_RU[hmNorm] || convData.hm}`, 4);
+        tryAddMatch(item, item.isIssue ? "Выпуск месяца" : "Тема месяца", 4);
       }
     });
 
@@ -3601,48 +3617,34 @@ async function renderCalendarContextWidget() {
     matched.sort((a, b) => a.priority - b.priority);
     const topItems = matched.slice(0, 3);
 
-    const metaParts = [todayRuLabel];
-    if (currentParashaRu) metaParts.push(`Глава ${currentParashaRu}`);
-
     slot.innerHTML = `
-      <section class="calendar-context-box" aria-label="Актуально к дате и неделе">
-        <div class="calendar-context-header">
-          <div class="calendar-context-title">
-            <span class="diamond"></span>
-            <span>Актуально к дате и неделе</span>
-          </div>
-          <div class="calendar-context-meta">${metaParts.join(" • ")}</div>
+      <section class="calendar-strip" aria-label="Актуально к дате и неделе">
+        <div class="calendar-strip-label">
+          <span class="diamond"></span>
+          <span>Актуально:</span>
         </div>
-        <div class="calendar-context-grid" id="calendarContextGrid"></div>
+        <div class="calendar-strip-items" id="calendarContextGrid"></div>
       </section>
     `;
 
     const gridEl = document.getElementById("calendarContextGrid");
     topItems.forEach(item => {
-      const card = document.createElement("article");
-      card.className = "calendar-item-card";
-
       const slug = item.isIssue ? `issue-${item.id}` : `article-${item.id}`;
-      card.innerHTML = `
-        <div>
-          <span class="calendar-item-badge">${item.badgeText}</span>
-          <h3 class="calendar-item-title">${item.title}</h3>
-          ${item.sub ? `<div class="calendar-item-sub">${item.sub}</div>` : ""}
-        </div>
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "calendar-strip-chip";
+      chip.title = item.sub ? `${item.title} (${item.sub})` : item.title;
+      chip.innerHTML = `
+        <span class="calendar-chip-tag">${item.badgeText}</span>
+        <span class="calendar-chip-title">${item.title}</span>
+        <span class="calendar-chip-arrow">→</span>
       `;
-
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "calendar-item-btn";
-      btn.textContent = item.isIssue ? "Открыть выпуск →" : "Читать статью →";
-      btn.onclick = () => openPdfReader(item.title, item.link, slug);
-
-      card.appendChild(btn);
-      gridEl.appendChild(card);
+      chip.onclick = () => openPdfReader(item.title, item.link, slug);
+      gridEl.appendChild(chip);
     });
   } catch (err) {
     console.warn("Calendar context widget skipped:", err);
-    slot.innerHTML = "";
+    if (slot) slot.innerHTML = "";
   }
 }
 
