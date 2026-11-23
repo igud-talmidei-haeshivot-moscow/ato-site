@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-23 15:19 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-23 15:20 UTC_
 
 ---
 
@@ -4787,18 +4787,17 @@ async function init() {
       fetch(NIGUNIM_CSV_URL)
     ]);
 
-   if (resArticles.ok) {
-      const rows = parseCSV(await resArticles.text());
-      allArticles = rows.slice(1)
+  if (resIssues.ok) {
+      const rows = parseCSV(await resIssues.text());
+      allIssues = rows.slice(1)
         .filter(r => r[0])
         .map((r, i) => ({
           id: i + 1,
           title: r[0] || "",
-          rubric: normalizeLabel(r[1]),
-          author: r[2] || "",
+          type: normalizeLabel(r[1]),
+          period: r[2] || "",
           desc: r[3] || "",
           link: r[4] || "",
-          audio: r[5] || "",
           calendarTags: r[6] || ""
         }));
     }
