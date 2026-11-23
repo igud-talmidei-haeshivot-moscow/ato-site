@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-23 17:47 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-23 17:48 UTC_
 
 ---
 
@@ -4907,369 +4907,8 @@ function hideAtoPreloader() {
 
 // Предохранитель: убираем прелоадер не позднее 2.5 сек даже при медленной сети
 setTimeout(hideAtoPreloader, 2500);
-let currentJewishContext = null;
 
-const PARASHA_RU_MAP = {
-  "bereshit": ["берешит"],
-  "noach": ["ноах"],
-  "lech-lecha": ["лех леха", "лех-леха"],
-  "vayeira": ["ваера"],
-  "chayei sara": ["хаей сара"],
-  "toldot": ["толдот"],
-  "vayetzei": ["ваетце", "вайеце"],
-  "vayishlach": ["ваишлах", "вайишлах"],
-  "vayeshev": ["ваешев", "вайешев"],
-  "miketz": ["микец"],
-  "vayigash": ["ваигаш", "вайигаш"],
-  "vayechi": ["ваехи", "вайехи"],
-  "shemot": ["шмот"],
-  "vaera": ["ваэра"],
-  "bo": ["бо"],
-  "beshalach": ["бешалах"],
-  "yitro": ["итро"],
-  "mishpatim": ["мишпатим"],
-  "terumah": ["трума"],
-  "tetzaveh": ["тецаве"],
-  "ki tisa": ["ки тиса"],
-  "vayakhel": ["ваякель"],
-  "pekudei": ["пкудей"],
-  "vayikra": ["ваикра"],
-  "tzav": ["цав"],
-  "shmini": ["шмини"],
-  "tazria": ["тазриа"],
-  "metzora": ["мецора"],
-  "achrei mot": ["ахарей мот"],
-  "kedoshim": ["кдошим"],
-  "emor": ["эмор"],
-  "behar": ["бегар", "бехар"],
-  "bechukotai": ["бехукотай"],
-  "bamidbar": ["бамидбар"],
-  "naso": ["насо"],
-  "beha'alotcha": ["бегаалотха"],
-  "sh'lach": ["шлах"],
-  "korach": ["корах"],
-  "chukat": ["хукат"],
-  "balak": ["балак"],
-  "pinchas": ["пинхас"],
-  "matot": ["матот"],
-  "masei": ["масей"],
-  "devarim": ["дварим"],
-  "vaetchanan": ["ваэтханан"],
-  "eikev": ["экев"],
-  "re'eh": ["реэ"],
-  "shoftim": ["шофтим"],
-  "ki teitzei": ["ки теце"],
-  "ki tavo": ["ки таво"],
-  "nitzavim": ["ницавим"],
-  "vayeilech": ["вайелех"],
-  "ha'azinu": ["гаазину"],
-  "vezot haberakhah": ["везот габраха"]
-};
-
-const HEBREW_MONTH_RU_MAP = {
-  "tishrei": { genitive: "тишрея", nominative: "тишрей" },
-  "cheshvan": { genitive: "хешвана", nominative: "хешван" },
-  "kislev": { genitive: "кислева", nominative: "кислев" },
-  "tevet": { genitive: "тевета", nominative: "тевет" },
-  "sh'vat": { genitive: "швата", nominative: "шват" },
-  "adar": { genitive: "адара", nominative: "адар" },
-  "adar i": { genitive: "адара", nominative: "адар" },
-  "adar ii": { genitive: "адара", nominative: "адар" },
-  "nisan": { genitive: "нисана", nominative: "нисан" },
-  "iyyar": { genitive: "ияра", nominative: "ияр" },
-  "sivan": { genitive: "сивана", nominative: "сиван" },
-  "tamuz": { genitive: "тамуза", nominative: "тамуз" },
-  "av": { genitive: "ава", nominative: "ав" },
-  "elul": { genitive: "элула", nominative: "элул" }
-};
-
-function renderCalendarContextWidget() {
-  const slot = document.getElementById("calendarContextSlot");
-  if (!slot || !currentJewishContext) return;
-  if (allArticles.length === 0 && allIssues.length === 0) return;
-
-  const { parashaRuList, parashaLabel, monthInfo, jewishDay, holidayKeywords } = currentJewishContext;
-  const matches = [];
-  const seenKeys = new Set();
-
-  const addMatch = (item, isIssue, reason) => {
-    const key = `${isIssue ? "issue" : "art"}-${item.id}`;
-    if (seenKeys.has(key) || !sanitizeUrl(item.link)) return;
-    seenKeys.add(key);
-    matches.push({ item, isIssue, reason });
-  };
-
-  if (parashaRuList.length > 0) {
-    allIssues.forEach(issue => {
-      const hay = `${issue.title} ${issue.period} ${issue.desc}`.toLowerCase();
-      if (parashaRuList.some(p => hay.includes(p))) {
-        addMatch(issue, true, `Глава ${parashaLabel}`);
-      }
-    });
-    allArticles.forEach(art => {
-      const hay = `${art.title} ${art.desc}`.toLowerCase();
-      if (parashaRuList.some(p => hay.includes(p))) {
-        addMatch(art, false, `Глава ${parashaLabel}`);
-      }
-    });
-  }
-
-  if (monthInfo && jewishDay) {
-    allArticles.forEach(art => {
-      const titleLower = art.title.toLowerCase();
-      const dateMatch = titleLower.match(new RegExp(`^(\\d{1,2})\\s+${monthInfo.genitive}\\b`));
-      if (dateMatch) {
-        const targetDay = parseInt(dateMatch[1], 10);
-        if (Math.abs(targetDay - jewishDay) <= 6) {
-          addMatch(art, false, `${targetDay} ${monthInfo.genitive}`);
-        }
-      }
-    });
-  }
-
-  if (holidayKeywords.length > 0) {
-    [...allIssues.map(i => ({ data: i, isIssue: true })), ...allArticles.map(a => ({ data: a, isIssue: false }))]
-      .forEach(entry => {
-        const hay = `${entry.data.title} ${entry.data.period || ""}`.toLowerCase();
-        if (holidayKeywords.some(kw => hay.includes(kw))) {
-          addMatch(entry.data, entry.isIssue, "К празднику / дате");
-        }
-      });
-  }
-
-  if (monthInfo) {
-    allIssues.forEach(issue => {
-      const hay = `${issue.title} ${issue.period}`.toLowerCase();
-      if (hay.includes(monthInfo.nominative) || hay.includes(monthInfo.genitive)) {
-        addMatch(issue, true, `Месяц ${monthInfo.nominative[0].toUpperCase() + monthInfo.nominative.slice(1)}`);
-      }
-    });
-  }
-
-  if (matches.length === 0) {
-    slot.innerHTML = "";
-    return;
-  }
-
-  const topMatches = matches.slice(0, 3);
-  const contextLabelParts = [];
-  if (parashaLabel) contextLabelParts.push(`Глава ${parashaLabel}`);
-  if (monthInfo && jewishDay) contextLabelParts.push(`${jewishDay} ${monthInfo.genitive}`);
-
-  slot.innerHTML = `
-    <section class="calendar-context-box" aria-label="Актуально на этой неделе">
-      <div class="calendar-context-header">
-        <div class="calendar-context-eyebrow">
-          <span class="diamond"></span>
-          <span>Актуально к дате и неделе</span>
-        </div>
-        ${contextLabelParts.length ? `<span class="calendar-context-badge">${contextLabelParts.join(" • ")}</span>` : ""}
-      </div>
-      <div class="calendar-context-items" id="calendarContextItems"></div>
-    </section>
-  `;
-
-  const listEl = document.getElementById("calendarContextItems");
-  topMatches.forEach(({ item, isIssue, reason }) => {
-    const chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "calendar-context-chip";
-    const slug = `${isIssue ? "issue" : "article"}-${item.id}`;
-    chip.innerHTML = `
-      <div>
-        <div class="calendar-chip-meta">${reason} • ${isIssue ? (item.type || "Выпуск") : (item.rubric || "Статья")}</div>
-        <div class="calendar-chip-title">${item.title}</div>
-      </div>
-      <span class="calendar-chip-arrow">→</span>
-    `;
-    chip.onclick = () => openPdfReader(item.title, item.link, slug);
-    listEl.appendChild(chip);
-  });
-}
 async function loadMoscowZmanim() {
-  let currentJewishContext = null;
-
-const PARASHA_RU_MAP = {
-  "bereshit": ["берешит"],
-  "noach": ["ноах"],
-  "lech-lecha": ["лех леха", "лех-леха"],
-  "vayeira": ["ваера"],
-  "chayei sara": ["хаей сара"],
-  "toldot": ["толдот"],
-  "vayetzei": ["ваетце", "вайеце"],
-  "vayishlach": ["ваишлах", "вайишлах"],
-  "vayeshev": ["ваешев", "вайешев"],
-  "miketz": ["микец"],
-  "vayigash": ["ваигаш", "вайигаш"],
-  "vayechi": ["ваехи", "вайехи"],
-  "shemot": ["шмот"],
-  "vaera": ["ваэра"],
-  "bo": ["бо"],
-  "beshalach": ["бешалах"],
-  "yitro": ["итро"],
-  "mishpatim": ["мишпатим"],
-  "terumah": ["трума"],
-  "tetzaveh": ["тецаве"],
-  "ki tisa": ["ки тиса"],
-  "vayakhel": ["ваякель"],
-  "pekudei": ["пкудей"],
-  "vayikra": ["ваикра"],
-  "tzav": ["цав"],
-  "shmini": ["шмини"],
-  "tazria": ["тазриа"],
-  "metzora": ["мецора"],
-  "achrei mot": ["ахарей мот"],
-  "kedoshim": ["кдошим"],
-  "emor": ["эмор"],
-  "behar": ["бегар", "бехар"],
-  "bechukotai": ["бехукотай"],
-  "bamidbar": ["бамидбар"],
-  "naso": ["насо"],
-  "beha'alotcha": ["бегаалотха"],
-  "sh'lach": ["шлах"],
-  "korach": ["корах"],
-  "chukat": ["хукат"],
-  "balak": ["балак"],
-  "pinchas": ["пинхас"],
-  "matot": ["матот"],
-  "masei": ["масей"],
-  "devarim": ["дварим"],
-  "vaetchanan": ["ваэтханан"],
-  "eikev": ["экев"],
-  "re'eh": ["реэ"],
-  "shoftim": ["шофтим"],
-  "ki teitzei": ["ки теце"],
-  "ki tavo": ["ки таво"],
-  "nitzavim": ["ницавим"],
-  "vayeilech": ["вайелех"],
-  "ha'azinu": ["гаазину"],
-  "vezot haberakhah": ["везот габраха"]
-};
-
-const HEBREW_MONTH_RU_MAP = {
-  "tishrei": { genitive: "тишрея", nominative: "тишрей" },
-  "cheshvan": { genitive: "хешвана", nominative: "хешван" },
-  "kislev": { genitive: "кислева", nominative: "кислев" },
-  "tevet": { genitive: "тевета", nominative: "тевет" },
-  "sh'vat": { genitive: "швата", nominative: "шват" },
-  "adar": { genitive: "адара", nominative: "адар" },
-  "adar i": { genitive: "адара", nominative: "адар" },
-  "adar ii": { genitive: "адара", nominative: "адар" },
-  "nisan": { genitive: "нисана", nominative: "нисан" },
-  "iyyar": { genitive: "ияра", nominative: "ияр" },
-  "sivan": { genitive: "сивана", nominative: "сиван" },
-  "tamuz": { genitive: "тамуза", nominative: "тамуз" },
-  "av": { genitive: "ава", nominative: "ав" },
-  "elul": { genitive: "элула", nominative: "элул" }
-};
-
-function renderCalendarContextWidget() {
-  const slot = document.getElementById("calendarContextSlot");
-  if (!slot || !currentJewishContext) return;
-  if (allArticles.length === 0 && allIssues.length === 0) return;
-
-  const { parashaRuList, parashaLabel, monthInfo, jewishDay, holidayKeywords } = currentJewishContext;
-  const matches = [];
-  const seenKeys = new Set();
-
-  const addMatch = (item, isIssue, reason) => {
-    const key = `${isIssue ? "issue" : "art"}-${item.id}`;
-    if (seenKeys.has(key) || !sanitizeUrl(item.link)) return;
-    seenKeys.add(key);
-    matches.push({ item, isIssue, reason });
-  };
-
-  // 1. Совпадение по недельной главе Торы
-  if (parashaRuList.length > 0) {
-    allIssues.forEach(issue => {
-      const hay = `${issue.title} ${issue.period} ${issue.desc}`.toLowerCase();
-      if (parashaRuList.some(p => hay.includes(p))) {
-        addMatch(issue, true, `Глава ${parashaLabel}`);
-      }
-    });
-    allArticles.forEach(art => {
-      const hay = `${art.title} ${art.desc}`.toLowerCase();
-      if (parashaRuList.some(p => hay.includes(p))) {
-        addMatch(art, false, `Глава ${parashaLabel}`);
-      }
-    });
-  }
-
-  // 2. Совпадение по ближайшим датам текущего еврейского месяца (например, "10 кислева", "19 кислева")
-  if (monthInfo && jewishDay) {
-    allArticles.forEach(art => {
-      const titleLower = art.title.toLowerCase();
-      const dateMatch = titleLower.match(new RegExp(`^(\\d{1,2})\\s+${monthInfo.genitive}\\b`));
-      if (dateMatch) {
-        const targetDay = parseInt(dateMatch[1], 10);
-        if (Math.abs(targetDay - jewishDay) <= 6) {
-          addMatch(art, false, `${targetDay} ${monthInfo.genitive}`);
-        }
-      }
-    });
-  }
-
-  // 3. Совпадение по праздникам / хасидским датам из Hebcal
-  if (holidayKeywords.length > 0) {
-    [...allIssues.map(i => ({ data: i, isIssue: true })), ...allArticles.map(a => ({ data: a, isIssue: false }))]
-      .forEach(entry => {
-        const hay = `${entry.data.title} ${entry.data.period || ""}`.toLowerCase();
-        if (holidayKeywords.some(kw => hay.includes(kw))) {
-          addMatch(entry.data, entry.isIssue, "К празднику / дате");
-        }
-      });
-  }
-
-  // 4. Выпуск месяца (например, "Кунтрес Тмимим • Хешван")
-  if (monthInfo) {
-    allIssues.forEach(issue => {
-      const hay = `${issue.title} ${issue.period}`.toLowerCase();
-      if (hay.includes(monthInfo.nominative) || hay.includes(monthInfo.genitive)) {
-        addMatch(issue, true, `Месяц ${monthInfo.nominative[0].toUpperCase() + monthInfo.nominative.slice(1)}`);
-      }
-    });
-  }
-
-  if (matches.length === 0) {
-    slot.innerHTML = "";
-    return;
-  }
-
-  const topMatches = matches.slice(0, 3);
-  const contextLabelParts = [];
-  if (parashaLabel) contextLabelParts.push(`Глава ${parashaLabel}`);
-  if (monthInfo && jewishDay) contextLabelParts.push(`${jewishDay} ${monthInfo.genitive}`);
-
-  slot.innerHTML = `
-    <section class="calendar-context-box" aria-label="Актуально на этой неделе">
-      <div class="calendar-context-header">
-        <div class="calendar-context-eyebrow">
-          <span class="diamond"></span>
-          <span>Актуально к дате и неделе</span>
-        </div>
-        ${contextLabelParts.length ? `<span class="calendar-context-badge">${contextLabelParts.join(" • ")}</span>` : ""}
-      </div>
-      <div class="calendar-context-items" id="calendarContextItems"></div>
-    </section>
-  `;
-
-  const listEl = document.getElementById("calendarContextItems");
-  topMatches.forEach(({ item, isIssue, reason }) => {
-    const chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "calendar-context-chip";
-    const slug = `${isIssue ? "issue" : "article"}-${item.id}`;
-    chip.innerHTML = `
-      <div>
-        <div class="calendar-chip-meta">${reason} • ${isIssue ? (item.type || "Выпуск") : (item.rubric || "Статья")}</div>
-        <div class="calendar-chip-title">${item.title}</div>
-      </div>
-      <span class="calendar-chip-arrow">→</span>
-    `;
-    chip.onclick = () => openPdfReader(item.title, item.link, slug);
-    listEl.appendChild(chip);
-  });
-}
   const candleEl = document.getElementById("candleTime");
   const havdalahEl = document.getElementById("havdalahTime");
   const havdalahLabelEl = havdalahEl.previousElementSibling;
@@ -5284,69 +4923,16 @@ function renderCalendarContextWidget() {
       hour: "2-digit",
       minute: "2-digit"
     });
-
     const getWeekdayEn = (isoStr) => new Date(isoStr).toLocaleDateString("en-US", {
       timeZone: "Europe/Moscow",
       weekday: "short"
     });
-
     const getWeekdayRu = (isoStr) => new Date(isoStr).toLocaleDateString("ru-RU", {
       timeZone: "Europe/Moscow",
       weekday: "short"
     });
 
     const havdalah = data.items.find(item => item.category === "havdalah");
-    // Извлекаем недельную главу и праздники для контекстной подборки
-    const parashaItem = data.items.find(item => item.category === "parashat");
-    let parashaRuList = [];
-    let parashaLabel = "";
-    if (parashaItem && parashaItem.title) {
-      const cleanEn = parashaItem.title.replace(/^Parashat\s+/i, "").toLowerCase().trim();
-      parashaRuList = PARASHA_RU_MAP[cleanEn] || [];
-      if (parashaRuList.length > 0) {
-        parashaLabel = parashaRuList[0][0].toUpperCase() + parashaRuList[0].slice(1);
-      }
-    }
-
-    const holidayKeywords = [];
-    data.items.filter(item => item.category === "holiday").forEach(h => {
-      const t = (h.title || "").toLowerCase();
-      if (t.includes("chanukah")) holidayKeywords.push("ханук");
-      if (t.includes("purim")) holidayKeywords.push("пурим");
-      if (t.includes("pesach")) holidayKeywords.push("песах");
-      if (t.includes("shavuot")) holidayKeywords.push("шавуот");
-      if (t.includes("rosh hashana")) holidayKeywords.push("рош а-шана");
-      if (t.includes("yom kippur")) holidayKeywords.push("йом кипур");
-      if (t.includes("sukkot")) holidayKeywords.push("суккот");
-    });
-
-    const mskNowParts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Europe/Moscow",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    }).format(new Date()).split("-");
-
-    let monthInfo = null;
-    let jewishDay = null;
-    try {
-      const convRes = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${mskNowParts[0]}&gm=${mskNowParts[1]}&gd=${mskNowParts[2]}&g2h=1`);
-      if (convRes.ok) {
-        const convData = await convRes.json();
-        jewishDay = convData.hd || null;
-        const hmKey = (convData.hm || "").toLowerCase().trim();
-        monthInfo = HEBREW_MONTH_RU_MAP[hmKey] || null;
-      }
-    } catch (_) {}
-
-    currentJewishContext = {
-      parashaRuList,
-      parashaLabel,
-      monthInfo,
-      jewishDay,
-      holidayKeywords
-    };
-    renderCalendarContextWidget();
     const candlesList = data.items.filter(item =>
       item.category === "candles" &&
       (!havdalah || new Date(item.date) < new Date(havdalah.date))
@@ -5380,6 +4966,67 @@ function renderCalendarContextWidget() {
   }
 }
 
+document.getElementById("searchInput").addEventListener("input", renderContent);setTimeout(hideAtoPreloader, 2500);
+
+async function loadMoscowZmanim() {
+  const candleEl = document.getElementById("candleTime");
+  const havdalahEl = document.getElementById("havdalahTime");
+  const havdalahLabelEl = havdalahEl.previousElementSibling;
+
+  try {
+    const res = await fetch("https://www.hebcal.com/shabbat?cfg=json&geonameid=524901&b=18&M=on");
+    if (!res.ok) throw new Error("Ошибка загрузки зманим");
+    const data = await res.json();
+
+    const getTimeMsk = (isoStr) => new Date(isoStr).toLocaleTimeString("ru-RU", {
+      timeZone: "Europe/Moscow",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+    const getWeekdayEn = (isoStr) => new Date(isoStr).toLocaleDateString("en-US", {
+      timeZone: "Europe/Moscow",
+      weekday: "short"
+    });
+    const getWeekdayRu = (isoStr) => new Date(isoStr).toLocaleDateString("ru-RU", {
+      timeZone: "Europe/Moscow",
+      weekday: "short"
+    });
+
+    const havdalah = data.items.find(item => item.category === "havdalah");
+    const candlesList = data.items.filter(item =>
+      item.category === "candles" &&
+      (!havdalah || new Date(item.date) < new Date(havdalah.date))
+    );
+
+    const isRegularShabbat =
+      candlesList.length === 1 &&
+      getWeekdayEn(candlesList[0].date) === "Fri" &&
+      havdalah &&
+      getWeekdayEn(havdalah.date) === "Sat";
+
+    if (isRegularShabbat) {
+      candleEl.textContent = getTimeMsk(candlesList[0].date);
+      havdalahLabelEl.textContent = "Выход Шаббата:";
+      havdalahEl.textContent = getTimeMsk(havdalah.date);
+    } else {
+      if (candlesList.length > 0) {
+        candleEl.textContent = candlesList
+          .map(c => `${getWeekdayRu(c.date)} ${getTimeMsk(c.date)}`)
+          .join(", ");
+      }
+      if (havdalah) {
+        const isSat = getWeekdayEn(havdalah.date) === "Sat";
+        havdalahLabelEl.textContent = isSat ? "Выход праздника / Шаббата:" : "Выход праздника:";
+        havdalahEl.textContent = `${getWeekdayRu(havdalah.date)} ${getTimeMsk(havdalah.date)}`;
+      }
+    }
+  } catch (err) {
+    candleEl.textContent = "—";
+    havdalahEl.textContent = "—";
+  }
+}
+
+document.getElementById("searchInput").addEventListener("input", renderContent);
 document.getElementById("searchInput").addEventListener("input", renderContent);
 init();
 loadMoscowZmanim();
