@@ -55,7 +55,6 @@ _Автоматически собрано из ветки `main`: 2026-11-23 17
   </script>
   <!-- /Yandex.Metrika counter -->
 </head>
-<body>
  <body>
   <div id="atoPreloader" class="ato-preloader" role="status" aria-live="polite" aria-label="Загрузка архива АТО">
     <div class="ato-preloader-card">
