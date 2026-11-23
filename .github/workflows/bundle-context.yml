@@ -64,3 +64,13 @@ jobs:
           git add CONTEXT_BUNDLE.md
           git diff --staged --quiet || git commit -m "Auto-bundle code context [skip ci]"
           git push
+      - name: Sync CONTEXT_BUNDLE to Google Doc
+        env:
+          WEBHOOK_URL: ${{ secrets.GAS_BUNDLE_WEBHOOK_URL }}
+        run: |
+          if [ -n "$WEBHOOK_URL" ]; then
+            curl -sS -L --fail --max-time 180 \
+              -H "Content-Type: text/plain; charset=utf-8" \
+              --data-binary @CONTEXT_BUNDLE.md \
+              "$WEBHOOK_URL"
+          fi
