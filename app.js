@@ -384,7 +384,6 @@ document.getElementById("mainTabs")?.scrollIntoView({ behavior: "smooth", block:
 };
 actionsEl.appendChild(allBtn);
 }
-function buildQuotesPool(manualQuotes, articles) {
 const HEBREW_MONTHS_RU = {
   nisan: "Нисана", iyyar: "Ияра", sivan: "Сивана", tamuz: "Тамуза",
   av: "Ава", elul: "Элула", tishrei: "Тишрея", cheshvan: "Хешвана",
@@ -1843,71 +1842,10 @@ async function loadMoscowZmanim() {
   }
 }
 
-document.getElementById("searchInput").addEventListener("input", renderContent);setTimeout(hideAtoPreloader, 2500);
-
-async function loadMoscowZmanim() {
-  const candleEl = document.getElementById("candleTime");
-  const havdalahEl = document.getElementById("havdalahTime");
-  const havdalahLabelEl = havdalahEl.previousElementSibling;
-
-  try {
-    const res = await fetch("https://www.hebcal.com/shabbat?cfg=json&geonameid=524901&b=18&M=on");
-    if (!res.ok) throw new Error("Ошибка загрузки зманим");
-    const data = await res.json();
-
-    const getTimeMsk = (isoStr) => new Date(isoStr).toLocaleTimeString("ru-RU", {
-      timeZone: "Europe/Moscow",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-    const getWeekdayEn = (isoStr) => new Date(isoStr).toLocaleDateString("en-US", {
-      timeZone: "Europe/Moscow",
-      weekday: "short"
-    });
-    const getWeekdayRu = (isoStr) => new Date(isoStr).toLocaleDateString("ru-RU", {
-      timeZone: "Europe/Moscow",
-      weekday: "short"
-    });
-
-    const havdalah = data.items.find(item => item.category === "havdalah");
-    const candlesList = data.items.filter(item =>
-      item.category === "candles" &&
-      (!havdalah || new Date(item.date) < new Date(havdalah.date))
-    );
-
-    const isRegularShabbat =
-      candlesList.length === 1 &&
-      getWeekdayEn(candlesList[0].date) === "Fri" &&
-      havdalah &&
-      getWeekdayEn(havdalah.date) === "Sat";
-
-    if (isRegularShabbat) {
-      candleEl.textContent = getTimeMsk(candlesList[0].date);
-      havdalahLabelEl.textContent = "Выход Шаббата:";
-      havdalahEl.textContent = getTimeMsk(havdalah.date);
-    } else {
-      if (candlesList.length > 0) {
-        candleEl.textContent = candlesList
-          .map(c => `${getWeekdayRu(c.date)} ${getTimeMsk(c.date)}`)
-          .join(", ");
-      }
-      if (havdalah) {
-        const isSat = getWeekdayEn(havdalah.date) === "Sat";
-        havdalahLabelEl.textContent = isSat ? "Выход праздника / Шаббата:" : "Выход праздника:";
-        havdalahEl.textContent = `${getWeekdayRu(havdalah.date)} ${getTimeMsk(havdalah.date)}`;
-      }
-    }
-  } catch (err) {
-    candleEl.textContent = "—";
-    havdalahEl.textContent = "—";
-  }
-}
-
 document.getElementById("searchInput").addEventListener("input", renderContent);
-document.getElementById("searchInput").addEventListener("input", renderContent);
+
 init();
 loadMoscowZmanim();
-
 const scrollTopBtn = document.getElementById("scrollTopBtn");
 if (scrollTopBtn) {
   window.addEventListener("scroll", () => {
