@@ -4413,8 +4413,9 @@ function renderNewsSection(area, query) {
   filteredNews.forEach((item, index) => {
     const card = document.createElement("article");
     let typeClass = "card";
-    if (item.type.toLowerCase().includes("афиша")) typeClass += " news-afisha";
-    else if (item.type.toLowerCase().includes("спойлер")) typeClass += " news-spoiler";
+    const typeLower = (item.type || "").toLowerCase();
+    if (typeLower.includes("выпуск")) typeClass += " news-release";
+    else if (typeLower.includes("спойлер")) typeClass += " news-spoiler";
     card.className = typeClass;
     card.style.animationDelay = `${Math.min(index * 55, 450)}ms`;
 
