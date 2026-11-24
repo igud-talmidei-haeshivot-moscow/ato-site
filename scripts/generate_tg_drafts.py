@@ -6,6 +6,7 @@ import json
 import os
 import re
 import sys
+import time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -248,8 +249,6 @@ def download_pdf_bytes(pdf_url: str) -> bytes:
 
 
 def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -> str:
-    import time
-
     article_url = f"{SITE_BASE_URL}#article-{article['id']}"
     prompt_template = PROMPT_FILE.read_text(encoding="utf-8")
     prompt = prompt_template.format(
@@ -345,12 +344,29 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
     text = re.sub(r"^```(?:html)?\s*", "", text, flags=re.I)
     text = re.sub(r"\s*```$", "", text).strip()
 
-    # Страховка: убираем случайные запрещённые хештеги и гарантируем наличие #дата
-    text = re.sub(r"#(?:новости|новость|спойлер|новый_выпуск|выпуск|афиша)(?:_[a-zA-Zа-яА-ЯёЁ0-9]+)?", "", text, flags=re.I)
+    # Убираем случайные запрещённые хештеги и гарантируем прямую ссылку + #дата в конце
+    text = re.sub(
+        r"#(?:новости|новость|спойлер|новый_выпуск|выпуск|афиша)(?:_[a-zA-Zа-яА-ЯёЁ0-9]+)?",
+        "",
+        text,
+        flags=re.I,
+    )
+    text = re.sub(r"(?:\s*#дата\b)+\s*$", "", text, flags=re.I).strip()
+
+    cta_line = f"Полную статью читайте на сайте АТО: {article_url}"
+    if article_url not in text:
+        if re.search(r"Полную статью читайте на сайте АТО\s*:?\s*$", text, flags=re.I):
+            text = re.sub(
+                r"Полную статью читайте на сайте АТО\s*:?\s*$",
+                cta_line,
+                text,
+                flags=re.I,
+            )
+        else:
+            text = f"{text}\n\n{cta_line}"
+
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
-    if "#дата" not in text.lower():
-        text = f"{text}\n\n#дата"
-    return text
+    return f"{text}\n\n#дата"
 
 
 def send_draft_to_telegram(draft_text: str, article: dict) -> None:
