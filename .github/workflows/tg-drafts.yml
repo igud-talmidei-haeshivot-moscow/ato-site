@@ -1,0 +1,55 @@
+name: Generate Telegram Drafts from Articles
+
+on:
+  schedule:
+    # Каждый день в 09:00 по Москве (06:00 UTC)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      article_query:
+        description: 'Тест / ручной запуск: название или номер статьи (пусто = авто по дате)'
+        required: false
+        default: ''
+      force_resend:
+        description: 'Игнорировать журнал уже отправленных (true/false)'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+jobs:
+  drafts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install --quiet requests
+
+      - name: Generate and send Telegram drafts
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          ARTICLE_QUERY: ${{ github.event.inputs.article_query }}
+          FORCE_RESEND: ${{ github.event.inputs.force_resend }}
+        run: python3 scripts/generate_tg_drafts.py
+
+      - name: Commit sent drafts log
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain .github/tg_drafts_sent.json)" ]; then
+            git add .github/tg_drafts_sent.json
+            git commit -m "chore: update sent Telegram drafts log [skip ci]"
+            git push
+          else
+            echo "No log changes to commit."
+          fi
