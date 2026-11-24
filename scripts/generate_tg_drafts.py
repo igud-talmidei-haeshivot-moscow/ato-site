@@ -278,15 +278,26 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
         },
     }
 
-    resp = requests.post(
-        endpoint,
-        headers={
-            "x-goog-api-key": GEMINI_API_KEY,
-            "Content-Type": "application/json",
-        },
-        json=payload,
-        timeout=90,
-    )
+    import time
+
+    resp = None
+    for attempt in range(3):
+        resp = requests.post(
+            endpoint,
+            headers={
+                "x-goog-api-key": GEMINI_API_KEY,
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=90,
+        )
+        if resp.status_code in (429, 503) and attempt < 2:
+            wait_sec = 10 * (attempt + 1)
+            print(f"Сервер Gemini перегружен (HTTP {resp.status_code}), повтор через {wait_sec} сек...")
+            time.sleep(wait_sec)
+            continue
+        break
+
     if not resp.ok:
         raise RuntimeError(f"Gemini API HTTP {resp.status_code}: {resp.text[:400]}")
 
