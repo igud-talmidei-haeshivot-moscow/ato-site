@@ -257,34 +257,19 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
         article_url=article_url,
     )
 
-    if GEMINI_API_KEY.startswith("AQ."):
-        endpoint = (
-            f"https://aiplatform.googleapis.com/v1/publishers/google/models/"
-            f"{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
-        )
-        headers = {"Content-Type": "application/json"}
-        role_block = {"role": "user"}
-    else:
-        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
-        headers = {
-            "x-goog-api-key": GEMINI_API_KEY,
-            "Content-Type": "application/json",
-        }
-        role_block = {}
-
+    endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
     payload = {
         "contents": [
             {
-                **role_block,
                 "parts": [
                     {"text": prompt},
                     {
-                        "inlineData": {
-                            "mimeType": "application/pdf",
+                        "inline_data": {
+                            "mime_type": "application/pdf",
                             "data": base64.b64encode(pdf_bytes).decode("ascii"),
                         }
                     },
-                ],
+                ]
             }
         ],
         "generationConfig": {
@@ -295,7 +280,10 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
 
     resp = requests.post(
         endpoint,
-        headers=headers,
+        headers={
+            "x-goog-api-key": GEMINI_API_KEY,
+            "Content-Type": "application/json",
+        },
         json=payload,
         timeout=90,
     )
