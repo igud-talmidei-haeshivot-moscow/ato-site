@@ -248,6 +248,8 @@ def download_pdf_bytes(pdf_url: str) -> bytes:
 
 
 def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -> str:
+    import time
+
     article_url = f"{SITE_BASE_URL}#article-{article['id']}"
     prompt_template = PROMPT_FILE.read_text(encoding="utf-8")
     prompt = prompt_template.format(
@@ -257,7 +259,6 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
         article_url=article_url,
     )
 
-    endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
     payload = {
         "contents": [
             {
@@ -278,28 +279,57 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
         },
     }
 
-    import time
+    headers = {
+        "x-goog-api-key": GEMINI_API_KEY,
+        "Content-Type": "application/json",
+    }
+
+    # Собираем список моделей: основная + доступные резервные (flash / lite / pro)
+    candidate_models = [GEMINI_MODEL]
+    try:
+        m_resp = requests.get(
+            "https://generativelanguage.googleapis.com/v1beta/models",
+            headers=headers,
+            timeout=15,
+        )
+        if m_resp.ok:
+            skip_words = ("embedding", "aqa", "imagen", "veo", "tts", "audio", "robotics", "computer-use")
+            discovered = []
+            for m in m_resp.json().get("models", []):
+                if "generateContent" not in m.get("supportedGenerationMethods", []):
+                    continue
+                short_name = m.get("name", "").replace("models/", "")
+                low = short_name.lower()
+                if "gemini-" in low and not any(w in low for w in skip_words):
+                    discovered.append(short_name)
+            discovered.sort(key=lambda n: (0 if "flash" in n else 1, n), reverse=False)
+            for name in discovered:
+                if name not in candidate_models:
+                    candidate_models.append(name)
+    except Exception:
+        pass
 
     resp = None
-    for attempt in range(3):
-        resp = requests.post(
-            endpoint,
-            headers={
-                "x-goog-api-key": GEMINI_API_KEY,
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=90,
-        )
-        if resp.status_code in (429, 503) and attempt < 2:
-            wait_sec = 10 * (attempt + 1)
-            print(f"Сервер Gemini перегружен (HTTP {resp.status_code}), повтор через {wait_sec} сек...")
-            time.sleep(wait_sec)
-            continue
-        break
+    last_error = "Не удалось получить ответ от Gemini API"
+    for model_name in candidate_models[:5]:
+        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+        for attempt in range(2):
+            resp = requests.post(endpoint, headers=headers, json=payload, timeout=90)
+            if resp.ok:
+                print(f"Успешная генерация через модель: {model_name}")
+                break
+            last_error = f"Gemini API ({model_name}) HTTP {resp.status_code}: {resp.text[:300]}"
+            if resp.status_code in (429, 503) and attempt == 0:
+                print(f"Модель {model_name} занята (HTTP {resp.status_code}), повтор через 6 сек...")
+                time.sleep(6)
+                continue
+            print(f"Переключаюсь с {model_name} на следующую модель (HTTP {resp.status_code})...")
+            break
+        if resp is not None and resp.ok:
+            break
 
-    if not resp.ok:
-        raise RuntimeError(f"Gemini API HTTP {resp.status_code}: {resp.text[:400]}")
+    if resp is None or not resp.ok:
+        raise RuntimeError(last_error)
 
     body = resp.json()
     candidates = body.get("candidates") or []
