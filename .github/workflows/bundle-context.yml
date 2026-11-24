@@ -7,6 +7,9 @@ on:
       - 'index.html'
       - 'style.css'
       - 'app.js'
+      - 'prompts/tg_draft_prompt.txt'
+      - 'scripts/generate_tg_drafts.py'
+      - '.github/workflows/tg-drafts.yml'
       - '.github/workflows/sync-audio.yml'
       - '.github/workflows/bundle-context.yml'
   workflow_dispatch:
@@ -24,53 +27,48 @@ jobs:
       - name: Build CONTEXT_BUNDLE.md
         run: |
           python3 - << 'EOF'
-          import datetime
+          import datetime as dt
+          from pathlib import Path
 
           files = [
               ("index.html", "html"),
               ("style.css", "css"),
               ("app.js", "javascript"),
+              ("prompts/tg_draft_prompt.txt", "text"),
+              ("scripts/generate_tg_drafts.py", "python"),
+              (".github/workflows/tg-drafts.yml", "yaml"),
               (".github/workflows/sync-audio.yml", "yaml"),
           ]
 
-          now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+          now_utc = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
           out = [
-              "# ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)",
-              f"_Автоматически собрано из ветки `main`: {now}_",
-              "",
-              "---",
-              ""
+              "# ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)\n",
+              f"_Автоматически собрано из ветки `main`: {now_utc}_\n\n---\n",
           ]
 
-          for path, lang in files:
-              out.append(f"## Файл: `{path}`")
-              out.append(f"```{lang}")
-              try:
-                  with open(path, "r", encoding="utf-8") as f:
-                      out.append(f.read().rstrip())
-              except FileNotFoundError:
-                  out.append(f"# Файл {path} не найден")
-              out.append("```")
-              out.append("")
+          for path_str, lang in files:
+              p = Path(path_str)
+              if not p.exists():
+                  continue
+              out.append(f"\n## Файл: `{path_str}`\n\n```{lang}\n{p.read_text(encoding='utf-8')}\n```\n")
 
-          with open("CONTEXT_BUNDLE.md", "w", encoding="utf-8") as f:
-              f.write("\n".join(out) + "\n")
+          Path("CONTEXT_BUNDLE.md").write_text("".join(out), encoding="utf-8")
           EOF
 
-      - name: Commit and push CONTEXT_BUNDLE.md
+      - name: Commit updated CONTEXT_BUNDLE.md
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CONTEXT_BUNDLE.md
-          git diff --staged --quiet || git commit -m "Auto-bundle code context [skip ci]"
-          git push
-      - name: Sync CONTEXT_BUNDLE to Google Doc
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain CONTEXT_BUNDLE.md)" ]; then
+            git add CONTEXT_BUNDLE.md
+            git commit -m "chore: update CONTEXT_BUNDLE.md [skip ci]"
+            git push
+          fi
+
+      - name: Sync bundle to Google Doc via GAS webhook
         env:
           WEBHOOK_URL: ${{ secrets.GAS_BUNDLE_WEBHOOK_URL }}
         run: |
           if [ -n "$WEBHOOK_URL" ]; then
-            curl -sS -L --fail --max-time 180 \
-              -H "Content-Type: text/plain; charset=utf-8" \
-              --data-binary @CONTEXT_BUNDLE.md \
-              "$WEBHOOK_URL"
+            curl -sS -L -X POST -H "Content-Type: text/plain; charset=utf-8" --data-binary @CONTEXT_BUNDLE.md "$WEBHOOK_URL"
           fi
