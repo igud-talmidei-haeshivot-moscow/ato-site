@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-24 09:32 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-24 09:33 UTC_
 
 ---
 
@@ -4369,11 +4369,11 @@ function renderNewsSection(area, query) {
 
   const subBar = document.createElement("div");
   subBar.className = "sub-filters";
-  const categories = [
+ const categories = [
     { id: "ALL", label: "Все публикации" },
-    { id: "Афиша", label: "Афиша событий" },
-    { id: "Спойлер", label: "Спойлеры выпусков" },
-    { id: "Новость ешивы", label: "Новости ешивы" }
+    { id: "Новость ешивы", label: "Новости ешивы" },
+    { id: "Новый выпуск", label: "Новые выпуски" },
+    { id: "Спойлер", label: "Спойлеры" }
   ];
 
   categories.forEach(cat => {
