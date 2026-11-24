@@ -13,11 +13,11 @@ import requests
 
 # ================= КОНФИГУРАЦИЯ =================
 ARTICLES_CSV_URL = (
-    "[https://docs.google.com/spreadsheets/d/e/](https://docs.google.com/spreadsheets/d/e/)"
+    "https://docs.google.com/spreadsheets/d/e/"
     "2PACX-1vTAAuPFgjW2LESsVaPw7HYqytvR-3uGhouUlH-0jDbw6sz_UMrWhK2vWi5tBBh4Re17DeG-6mzIcQmT"
     "/pub?gid=0&single=true&output=csv"
 )
-SITE_BASE_URL = "[https://igud-talmidei-haeshivot-moscow.github.io/ato-site/](https://igud-talmidei-haeshivot-moscow.github.io/ato-site/)"
+SITE_BASE_URL = "https://igud-talmidei-haeshivot-moscow.github.io/ato-site/"
 PROMPT_FILE = Path("prompts/tg_draft_prompt.txt")
 SENT_LOG_FILE = Path(".github/tg_drafts_sent.json")
 
@@ -140,7 +140,7 @@ def get_calendar_context() -> dict:
     target_date = now_msk + dt.timedelta(days=DAYS_AHEAD)
 
     conv_resp = requests.get(
-        "[https://www.hebcal.com/converter](https://www.hebcal.com/converter)",
+        "https://www.hebcal.com/converter",
         params={
             "cfg": "json",
             "gy": target_date.year,
@@ -165,7 +165,7 @@ def get_calendar_context() -> dict:
 
     # Праздники ровно через +2 дня
     cal_target_resp = requests.get(
-        "[https://www.hebcal.com/hebcal](https://www.hebcal.com/hebcal)",
+        "https://www.hebcal.com/hebcal",
         params={
             "v": 1,
             "cfg": "json",
@@ -191,7 +191,7 @@ def get_calendar_context() -> dict:
     if now_msk.weekday() in (2, 3):
         week_end = now_msk + dt.timedelta(days=5)
         parasha_resp = requests.get(
-            "[https://www.hebcal.com/hebcal](https://www.hebcal.com/hebcal)",
+            "https://www.hebcal.com/hebcal",
             params={
                 "v": 1,
                 "cfg": "json",
@@ -230,7 +230,7 @@ def extract_drive_file_id(url: str) -> str:
 def download_pdf_bytes(pdf_url: str) -> bytes:
     file_id = extract_drive_file_id(pdf_url)
     download_url = (
-        f"[https://drive.google.com/uc?export=download&confirm=t&id=](https://drive.google.com/uc?export=download&confirm=t&id=){file_id}"
+        f"https://drive.google.com/uc?export=download&confirm=t&id={file_id}"
         if file_id
         else pdf_url
     )
@@ -257,8 +257,11 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
         article_url=article_url,
     )
 
-   if GEMINI_API_KEY.startswith("AQ."):
-        endpoint = f"https://aiplatform.googleapis.com/v1/publishers/google/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+    if GEMINI_API_KEY.startswith("AQ."):
+        endpoint = (
+            f"https://aiplatform.googleapis.com/v1/publishers/google/models/"
+            f"{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+        )
         headers = {"Content-Type": "application/json"}
         role_block = {"role": "user"}
     else:
@@ -276,8 +279,8 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
                 "parts": [
                     {"text": prompt},
                     {
-                        "inline_data": {
-                            "mime_type": "application/pdf",
+                        "inlineData": {
+                            "mimeType": "application/pdf",
                             "data": base64.b64encode(pdf_bytes).decode("ascii"),
                         }
                     },
@@ -332,7 +335,7 @@ def send_draft_to_telegram(draft_text: str, article: dict) -> None:
         ]
     }
 
-    api_url = f"[https://api.telegram.org/bot](https://api.telegram.org/bot){TG_BOT_TOKEN}/sendMessage"
+    api_url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": TG_CHAT_ID,
         "text": draft_text,
