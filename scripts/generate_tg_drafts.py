@@ -257,10 +257,22 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
         article_url=article_url,
     )
 
-    endpoint = f"[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/){GEMINI_MODEL}:generateContent"
+   if GEMINI_API_KEY.startswith("AQ."):
+        endpoint = f"https://aiplatform.googleapis.com/v1/publishers/google/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+        headers = {"Content-Type": "application/json"}
+        role_block = {"role": "user"}
+    else:
+        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+        headers = {
+            "x-goog-api-key": GEMINI_API_KEY,
+            "Content-Type": "application/json",
+        }
+        role_block = {}
+
     payload = {
         "contents": [
             {
+                **role_block,
                 "parts": [
                     {"text": prompt},
                     {
@@ -269,7 +281,7 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
                             "data": base64.b64encode(pdf_bytes).decode("ascii"),
                         }
                     },
-                ]
+                ],
             }
         ],
         "generationConfig": {
@@ -280,10 +292,7 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
 
     resp = requests.post(
         endpoint,
-        headers={
-            "x-goog-api-key": GEMINI_API_KEY,
-            "Content-Type": "application/json",
-        },
+        headers=headers,
         json=payload,
         timeout=90,
     )
