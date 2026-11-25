@@ -2752,3 +2752,47 @@ body.player-open footer {
   background: linear-gradient(90deg, var(--navy-deep) 0%, var(--blue-accent) 100%);
   color: #FFFFFF;
 }
+/* Двухуровневые фильтры раздела «Нигуним» (Сборник → Тома) */
+.nigun-collections-bar {
+  margin-bottom: 0.85rem;
+}
+
+.nigun-volumes-bar {
+  background-color: var(--bg-surface);
+  border: 1.5px solid #C8DDF5;
+  border-left: 4px solid var(--blue-accent);
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 1.25rem;
+  gap: 0.42rem;
+}
+
+.nigun-volumes-bar .sub-btn {
+  padding: 0.3rem 0.72rem;
+  font-size: 0.8rem;
+}
+
+.nigun-volumes-bar .sub-btn.active {
+  background-color: var(--navy-deep);
+  border-color: var(--navy-deep);
+  box-shadow: 0 4px 10px -2px rgba(7, 22, 43, 0.3);
+}
+
+@media (max-width: 768px) {
+  .nigun-volumes-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0.55rem 0.7rem;
+  }
+
+  .nigun-volumes-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nigun-volumes-bar .sub-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
