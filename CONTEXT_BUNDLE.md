@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-25 11:41 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-25 11:55 UTC_
 
 ---
 
@@ -1754,95 +1754,49 @@ header {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
-  /* Мобильная адаптация шапки и навигации */
+
+/* Мобильная адаптация шапки и навигации */
 @media (max-width: 768px) {
   .zmanim-bar {
     padding: 0.5rem 1rem;
   }
-
   .zmanim-inner {
     justify-content: center;
     text-align: center;
     gap: 0.35rem 1rem;
   }
-
   header {
     padding: 1.5rem 1rem 1.75rem;
   }
-
   .header-grid {
     flex-direction: column;
     align-items: stretch;
     gap: 1.25rem;
   }
-
   .brand-block {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 0.9rem;
   }
-
-  .logo-frame img {
-    height: 74px;
-  }
-
-  .brand-eyebrow {
-    justify-content: center;
-    font-size: 0.78rem;
-  }
-
-  .subtitle {
-    font-size: 0.92rem;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .tg-links {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .tg-btn {
-    width: 100%;
-    padding: 0.8rem 1rem;
-    font-size: 0.88rem;
-  }
-
-  main {
-    padding: 0 1rem 3rem;
-  }
-
-  .controls {
-    flex-direction: column;
-    align-items: stretch;
-    margin: 1.4rem auto 1.1rem;
-  }
-
   .search-input {
     width: 100%;
     min-width: 0;
   }
-
   .divider-v {
     display: none;
   }
-
   .pdf-toolbar {
     flex-wrap: wrap;
     padding: 0.7rem 0.9rem;
   }
-
   .pdf-title {
     width: 100%;
     font-size: 1rem;
   }
-
   .pdf-actions {
     width: 100%;
     justify-content: space-between;
   }
-
   .pdf-action-btn,
   .pdf-close-btn {
     padding: 0.4rem 0.65rem;
