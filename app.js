@@ -18,6 +18,7 @@ let currentQuoteIndex = 0;
 let currentMode = "ARTICLES";
 let currentRubric = "ALL";
 let currentAuthor = "ALL";
+let currentNigunCollection = "ALL";
 let currentNigunCategory = "ALL";
 let currentNewsCategory = "ALL";
 
@@ -116,9 +117,10 @@ function handleHashNavigation() {
     const idx = parseInt(nigunMatch[1], 10) - 1;
     const item = allNigunim[idx];
     if (item && sanitizeUrl(item.audio)) {
-      currentMode = "NIGUNIM";
-      currentNigunCategory = "ALL";
-      const nigunBtn = document.querySelector('#mainTabs [data-mode="NIGUNIM"]');
+     currentMode = "NIGUNIM";
+    currentNigunCollection = "ALL";
+    currentNigunCategory = "ALL";
+    const nigunBtn = document.querySelector('#mainTabs [data-mode="NIGUNIM"]');
       setActiveButton(nigunBtn);
       renderRubricSubBar(allArticles);
       renderContent();
@@ -301,7 +303,10 @@ function setupFilters(articles) {
           history.replaceState(null, "", window.location.pathname + window.location.search);
         }
       }
-      if (currentMode === "NIGUNIM") currentNigunCategory = "ALL";
+     if (currentMode === "NIGUNIM") {
+        currentNigunCollection = "ALL";
+        currentNigunCategory = "ALL";
+      }
       if (currentMode === "NEWS") currentNewsCategory = "ALL";
       setActiveButton(btn);
       renderRubricSubBar(articles);
@@ -1072,35 +1077,112 @@ document.addEventListener("keydown", (e) => {
 // ================================================================
 // ================================================================
 
+function parseNigunCategory(rawCat) {
+  const clean = (rawCat || "").replace(/\s+/g, " ").trim();
+  if (!clean) return { collection: "Прочее", subCategory: "" };
+
+  if (clean.includes("/")) {
+    const [colPart, ...subParts] = clean.split("/");
+    return {
+      collection: normalizeLabel(colPart) || "Прочее",
+      subCategory: normalizeLabel(subParts.join("/"))
+    };
+  }
+
+  if (/^том\b/i.test(clean)) {
+    return {
+      collection: "Нихоах",
+      subCategory: normalizeLabel(clean)
+    };
+  }
+
+  return {
+    collection: normalizeLabel(clean),
+    subCategory: ""
+  };
+}
+
 function renderNigunimSection(area, query) {
   area.innerHTML = "";
 
-  const uniqueCats = [...new Set(allNigunim.map(n => n.category).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, "ru", { numeric: true }));
-
-  const subBar = document.createElement("div");
-  subBar.className = "sub-filters";
-
-  ["ALL", ...uniqueCats].forEach(cat => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = currentNigunCategory === cat ? "sub-btn active" : "sub-btn";
-    btn.textContent = cat === "ALL" ? `Все тома (${allNigunim.length})` : cat;
-    btn.onclick = () => {
-      currentNigunCategory = cat;
-      renderContent();
+  const enriched = allNigunim.map(item => {
+    const meta = parseNigunCategory(item.category);
+    return {
+      ...item,
+      collection: meta.collection,
+      subCategory: meta.subCategory
     };
-    subBar.appendChild(btn);
   });
 
-  area.appendChild(subBar);
+  const collectionCounts = new Map();
+  enriched.forEach(item => {
+    collectionCounts.set(item.collection, (collectionCounts.get(item.collection) || 0) + 1);
+  });
+  const collections = [...collectionCounts.keys()];
 
-  const filtered = allNigunim.filter(item => {
-    const matchCat = currentNigunCategory === "ALL" || item.category === currentNigunCategory;
+  if (currentNigunCollection !== "ALL" && !collectionCounts.has(currentNigunCollection)) {
+    currentNigunCollection = "ALL";
+    currentNigunCategory = "ALL";
+  }
+
+  // 1-й уровень: Все нигуним | Нихоах | (будущие сборники)
+  const collectionsBar = document.createElement("div");
+  collectionsBar.className = "sub-filters nigun-collections-bar";
+
+  ["ALL", ...collections].forEach(col => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = currentNigunCollection === col ? "sub-btn active" : "sub-btn";
+    btn.textContent = col === "ALL"
+      ? `Все нигуним (${enriched.length})`
+      : `${col} (${collectionCounts.get(col)})`;
+    btn.onclick = () => {
+      currentNigunCollection = col;
+      currentNigunCategory = "ALL";
+      renderContent();
+    };
+    collectionsBar.appendChild(btn);
+  });
+  area.appendChild(collectionsBar);
+
+  // 2-й уровень: Тома / подкатегории (показывается только внутри выбранного сборника)
+  if (currentNigunCollection !== "ALL") {
+    const inCollection = enriched.filter(item => item.collection === currentNigunCollection);
+    const uniqueSubCats = [...new Set(inCollection.map(item => item.subCategory).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, "ru", { numeric: true }));
+
+    if (uniqueSubCats.length > 0) {
+      if (currentNigunCategory !== "ALL" && !uniqueSubCats.includes(currentNigunCategory)) {
+        currentNigunCategory = "ALL";
+      }
+
+      const volumesBar = document.createElement("div");
+      volumesBar.className = "sub-filters nigun-volumes-bar";
+
+      ["ALL", ...uniqueSubCats].forEach(sub => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = currentNigunCategory === sub ? "sub-btn active" : "sub-btn";
+        btn.textContent = sub === "ALL" ? `Все тома (${inCollection.length})` : sub;
+        btn.onclick = () => {
+          currentNigunCategory = sub;
+          renderContent();
+        };
+        volumesBar.appendChild(btn);
+      });
+      area.appendChild(volumesBar);
+    }
+  }
+
+  const filtered = enriched.filter(item => {
+    const matchCollection = currentNigunCollection === "ALL" || item.collection === currentNigunCollection;
+    const matchSub = currentNigunCategory === "ALL" || item.subCategory === currentNigunCategory;
     const matchQuery = !query ||
       item.title.toLowerCase().includes(query) ||
+      item.collection.toLowerCase().includes(query) ||
+      item.subCategory.toLowerCase().includes(query) ||
       item.category.toLowerCase().includes(query);
-    return matchCat && matchQuery;
+    return matchCollection && matchSub && matchQuery;
   });
 
   if (filtered.length === 0) {
@@ -1134,6 +1216,7 @@ function renderNigunimSection(area, query) {
     const row = document.createElement("div");
     row.className = "nigun-row";
     row.dataset.trackKey = item.key;
+
     if (item.key === currentTrackKey) {
       row.classList.add("active-track");
       if (!nigunAudio.paused) row.classList.add("playing");
@@ -1175,14 +1258,18 @@ function renderNigunimSection(area, query) {
     const actionsWrap = document.createElement("div");
     actionsWrap.className = "nigun-row-actions";
 
-    if (item.category) {
+    const tagLabel = currentNigunCollection === "ALL"
+      ? (item.subCategory ? `${item.collection} • ${item.subCategory}` : item.collection)
+      : (item.subCategory || item.collection);
+
+    if (tagLabel) {
       const tagEl = document.createElement("span");
       tagEl.className = "nigun-row-tag";
-      tagEl.textContent = item.category;
+      tagEl.textContent = tagLabel;
       actionsWrap.appendChild(tagEl);
     }
 
-const resolvedArticle = resolveNigunArticle(item);
+    const resolvedArticle = resolveNigunArticle(item);
     if (resolvedArticle) {
       const artBtn = document.createElement("button");
       artBtn.type = "button";
@@ -1195,7 +1282,8 @@ const resolvedArticle = resolveNigunArticle(item);
       };
       actionsWrap.appendChild(artBtn);
     }
-   const shareBtn = document.createElement("button");
+
+    const shareBtn = document.createElement("button");
     shareBtn.type = "button";
     shareBtn.className = "nigun-row-share";
     shareBtn.title = "Скопировать прямую ссылку на нигун";
@@ -1225,7 +1313,6 @@ const resolvedArticle = resolveNigunArticle(item);
 
   area.appendChild(listWrap);
 }
-
 function buildCardElement(item, isIssue, animIndex) {
 const card = document.createElement("article");
 card.className = isIssue ? "card issue-card" : "card";
