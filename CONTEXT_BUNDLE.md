@@ -1,5 +1,5 @@
 # ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-24 15:59 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-25 11:41 UTC_
 
 ---
 
@@ -5118,7 +5118,7 @@ PROMPT_FILE = Path("prompts/tg_draft_prompt.txt")
 SENT_LOG_FILE = Path(".github/tg_drafts_sent.json")
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip()
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "").strip()
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "").strip()
 TG_CHAT_ID = os.environ.get("TG_CHAT_ID", "").strip()
 
@@ -5378,8 +5378,8 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
         "Content-Type": "application/json",
     }
 
-    # Собираем список моделей: основная + доступные резервные (flash / lite / pro)
-    candidate_models = [GEMINI_MODEL]
+   # Собираем список моделей из API: первыми идут самые свежие flash-модели
+    candidate_models = [GEMINI_MODEL] if GEMINI_MODEL else []
     try:
         m_resp = requests.get(
             "https://generativelanguage.googleapis.com/v1beta/models",
@@ -5396,19 +5396,33 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
                 low = short_name.lower()
                 if "gemini-" in low and not any(w in low for w in skip_words):
                     discovered.append(short_name)
-            discovered.sort(key=lambda n: (0 if "flash" in n else 1, n), reverse=False)
+            discovered.sort(key=lambda n: (1 if "flash" in n.lower() else 0, n), reverse=True)
             for name in discovered:
                 if name not in candidate_models:
                     candidate_models.append(name)
     except Exception:
         pass
 
+    if not candidate_models:
+        candidate_models = ["gemini-flash-latest"]
+
     resp = None
     last_error = "Не удалось получить ответ от Gemini API"
     for model_name in candidate_models[:5]:
         endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
         for attempt in range(2):
-            resp = requests.post(endpoint, headers=headers, json=payload, timeout=90)
+            resp = None
+            try:
+                resp = requests.post(endpoint, headers=headers, json=payload, timeout=(15, 240))
+            except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as exc:
+                last_error = f"Gemini API ({model_name}) таймаут/сеть: {exc}"
+                if attempt == 0:
+                    print(f"Таймаут модели {model_name}, повтор через 6 сек...")
+                    time.sleep(6)
+                    continue
+                print(f"Переключаюсь с {model_name} на следующую модель после таймаута...")
+                break
+
             if resp.ok:
                 print(f"Успешная генерация через модель: {model_name}")
                 break
