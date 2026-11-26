@@ -1,18 +1,14 @@
-name: Bundle Code Context for NotebookLM
+name: Sync 4 Code Context Bundles to Google Docs
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
-    paths:
-      - 'index.html'
-      - 'style.css'
-      - 'app.js'
-      - 'prompts/tg_draft_prompt.txt'
-      - 'scripts/generate_tg_drafts.py'
-      - '.github/workflows/tg-drafts.yml'
-      - '.github/workflows/sync-audio.yml'
-      - '.github/workflows/bundle-context.yml'
-  workflow_dispatch:
+    paths-ignore:
+      - 'audio/**'
+      - '.github/context/**'
+      - '.github/tg_drafts_sent.json'
+      - 'CONTEXT_BUNDLE.md'
 
 permissions:
   contents: write
@@ -24,51 +20,109 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build CONTEXT_BUNDLE.md
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install requests
+        run: pip install --quiet requests
+
+      - name: Build 4 bundles and push to Google Docs
+        env:
+          GAS_BUNDLE_WEBHOOK_URL: ${{ secrets.GAS_BUNDLE_WEBHOOK_URL }}
         run: |
           python3 - << 'EOF'
           import datetime as dt
+          import os
           from pathlib import Path
+          import requests
 
-          files = [
-              ("index.html", "html"),
-              ("style.css", "css"),
-              ("app.js", "javascript"),
-              ("prompts/tg_draft_prompt.txt", "text"),
-              ("scripts/generate_tg_drafts.py", "python"),
-              (".github/workflows/tg-drafts.yml", "yaml"),
-              (".github/workflows/sync-audio.yml", "yaml"),
-          ]
+          timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+          out_dir = Path(".github/context")
+          out_dir.mkdir(parents=True, exist_ok=True)
 
-          now_utc = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-          out = [
-              "# ЕДИНЫЙ КОНТЕКСТ КОДА ПРОЕКТА АТО (תשפ״ז)\n",
-              f"_Автоматически собрано из ветки `main`: {now_utc}_\n\n---\n",
-          ]
+          BUNDLES_SPEC = {
+              "html": {
+                  "filename": "bundle_1_html_pwa.md",
+                  "title": "КОНТЕКСТ 1 • HTML И PWA (АТО • תשפ״ז)",
+                  "files": [
+                      ("index.html", "html"),
+                      ("manifest.json", "json"),
+                      ("sw.js", "javascript"),
+                  ],
+              },
+              "css": {
+                  "filename": "bundle_2_css.md",
+                  "title": "КОНТЕКСТ 2 • СТИЛИ CSS (АТО • תשפ״ז)",
+                  "files": [
+                      ("style.css", "css"),
+                  ],
+              },
+              "js": {
+                  "filename": "bundle_3_js.md",
+                  "title": "КОНТЕКСТ 3 • ЛОГИКА APP.JS (АТО • תשפ״ז)",
+                  "files": [
+                      ("app.js", "javascript"),
+                  ],
+              },
+              "automation": {
+                  "filename": "bundle_4_automation.md",
+                  "title": "КОНТЕКСТ 4 • БОТ, ПРОМПТЫ И GITHUB ACTIONS (АТО • תשפ״ז)",
+                  "files": [
+                      ("prompts/tg_draft_prompt.txt", "text"),
+                      ("prompts/tg_article_prompt.txt", "text"),
+                      ("scripts/generate_tg_drafts.py", "python"),
+                      (".github/workflows/tg-drafts.yml", "yaml"),
+                      (".github/workflows/sync-audio.yml", "yaml"),
+                      (".github/workflows/bundle-context.yml", "yaml"),
+                  ],
+              },
+          }
 
-          for path_str, lang in files:
-              p = Path(path_str)
-              if not p.exists():
-                  continue
-              out.append(f"\n## Файл: `{path_str}`\n\n```{lang}\n{p.read_text(encoding='utf-8')}\n```\n")
+          payload_bundles = {}
 
-          Path("CONTEXT_BUNDLE.md").write_text("".join(out), encoding="utf-8")
+          for key, spec in BUNDLES_SPEC.items():
+              parts = [
+                  f"# {spec['title']}\n",
+                  f"_Автоматически собрано из ветки `main`: {timestamp}_\n\n---\n",
+              ]
+              for rel_path, lang in spec["files"]:
+                  p = Path(rel_path)
+                  if not p.exists():
+                      continue
+                  content = p.read_text(encoding="utf-8")
+                  parts.append(f"\n## Файл: `{rel_path}`\n\n```{lang}\n{content}\n```\n")
+
+              bundle_text = "".join(parts)
+              (out_dir / spec["filename"]).write_text(bundle_text, encoding="utf-8")
+              payload_bundles[key] = bundle_text
+              print(f"Собран {spec['filename']}: {len(bundle_text)} симв.")
+
+          webhook_url = os.environ.get("GAS_BUNDLE_WEBHOOK_URL", "").strip()
+          if not webhook_url:
+              raise SystemExit("Ошибка: не задан секрет GAS_BUNDLE_WEBHOOK_URL")
+
+          resp = requests.post(
+              webhook_url,
+              json={"bundles": payload_bundles},
+              timeout=60,
+          )
+          resp.raise_for_status()
+          body = resp.text.strip()
+          print("Ответ Apps Script:", body)
+          if not body.startswith("OK:"):
+              raise SystemExit(f"Apps Script вернул ошибку: {body}")
           EOF
 
-      - name: Commit updated CONTEXT_BUNDLE.md
+      - name: Commit updated context bundles
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if [ -n "$(git status --porcelain CONTEXT_BUNDLE.md)" ]; then
-            git add CONTEXT_BUNDLE.md
-            git commit -m "chore: update CONTEXT_BUNDLE.md [skip ci]"
+          if [ -n "$(git status --porcelain .github/context)" ]; then
+            git add .github/context
+            git commit -m "chore: update 4 context bundles [skip ci]"
             git push
-          fi
-
-      - name: Sync bundle to Google Doc via GAS webhook
-        env:
-          WEBHOOK_URL: ${{ secrets.GAS_BUNDLE_WEBHOOK_URL }}
-        run: |
-          if [ -n "$WEBHOOK_URL" ]; then
-            curl -sS -L -X POST -H "Content-Type: text/plain; charset=utf-8" --data-binary @CONTEXT_BUNDLE.md "$WEBHOOK_URL"
+          else
+            echo "No bundle changes to commit."
           fi
