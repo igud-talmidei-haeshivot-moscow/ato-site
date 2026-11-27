@@ -647,9 +647,18 @@ on:
   workflow_dispatch:
     inputs:
       article_query:
-        description: 'Тест / ручной запуск: название или номер статьи (пусто = авто по дате)'
+        description: 'Ручной запуск: название или номер статьи (пусто = авто по дате)'
         required: false
         default: ''
+      post_mode:
+        description: 'Режим поста (auto = сам определит по колонке Календарь / Теги)'
+        type: choice
+        required: false
+        default: 'auto'
+        options:
+          - auto
+          - article
+          - date
       force_resend:
         description: 'Игнорировать журнал уже отправленных (true/false)'
         required: false
@@ -679,6 +688,7 @@ jobs:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           ARTICLE_QUERY: ${{ github.event.inputs.article_query }}
+          POST_MODE: ${{ github.event.inputs.post_mode }}
           FORCE_RESEND: ${{ github.event.inputs.force_resend }}
         run: python3 scripts/generate_tg_drafts.py
 
