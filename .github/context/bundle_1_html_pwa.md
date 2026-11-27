@@ -1,5 +1,5 @@
 # КОНТЕКСТ 1 • HTML И PWA (АТО • תשפ״ז)
-_Автоматически собрано из ветки `main`: 2026-11-27 07:20 UTC_
+_Автоматически собрано из ветки `main`: 2026-11-27 07:21 UTC_
 
 ---
 
@@ -156,7 +156,7 @@ _Автоматически собрано из ветки `main`: 2026-11-27 07
         <div class="pdf-title" id="pdfModalTitle">Просмотр документа</div>
         <div class="pdf-actions">
           <button type="button" id="pdfCopyLinkBtn" class="pdf-action-btn">Скопировать ссылку</button>
-          <a href="#" id="pdfDownloadLink" target="_blank" rel="noopener noreferrer" class="pdf-action-btn">Скачать / Открыть в новой вкладке ↗</a>
+         <a href="#" id="pdfDownloadLink" target="_blank" rel="noopener noreferrer" class="pdf-action-btn">Скачать / Открыть ↗</a>
           <button type="button" id="pdfCloseBtn" class="pdf-close-btn">Закрыть ✕</button>
         </div>
       </div>
