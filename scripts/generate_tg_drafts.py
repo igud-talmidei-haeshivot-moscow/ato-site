@@ -19,7 +19,8 @@ ARTICLES_CSV_URL = (
     "/pub?gid=0&single=true&output=csv"
 )
 SITE_BASE_URL = "https://igud-talmidei-haeshivot-moscow.github.io/ato-site/"
-PROMPT_FILE = Path("prompts/tg_draft_prompt.txt")
+DATE_PROMPT_FILE = Path("prompts/tg_draft_prompt.txt")
+ARTICLE_PROMPT_FILE = Path("prompts/tg_article_prompt.txt")
 SENT_LOG_FILE = Path(".github/tg_drafts_sent.json")
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
@@ -28,6 +29,7 @@ TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "").strip()
 TG_CHAT_ID = os.environ.get("TG_CHAT_ID", "").strip()
 
 MANUAL_ARTICLE_QUERY = os.environ.get("ARTICLE_QUERY", "").strip()
+POST_MODE = os.environ.get("POST_MODE", "auto").strip().lower()
 FORCE_RESEND = os.environ.get("FORCE_RESEND", "false").lower() == "true"
 
 DAYS_AHEAD = 2
@@ -106,6 +108,23 @@ def normalize_calendar_tag(raw: str) -> str:
 
 def parse_article_tags(raw_tags: str) -> list[str]:
     return [t for t in (normalize_calendar_tag(x) for x in (raw_tags or "").split(",")) if t]
+
+
+def resolve_manual_occasion(article: dict) -> str:
+    """Превращает первый календарный тег статьи в понятный русский повод для ручного запуска."""
+    for tag in article.get("tags", []):
+        if tag in PARASHA_RU_MAP:
+            return f"Недельная глава {PARASHA_RU_MAP[tag]}"
+        for h_key, h_ru in HOLIDAY_ALIASES:
+            if h_key in tag:
+                return h_ru
+        date_match = re.match(r"^(\d{1,2})\s+(.+)$", tag)
+        if date_match:
+            day_str, month_key = date_match.group(1), date_match.group(2).strip()
+            month_ru = HEBREW_MONTHS_RU.get(month_key)
+            if month_ru:
+                return f"{day_str} {month_ru}"
+    return article["title"]
 
 
 # ================= ЗАГРУЗКА СТАТЕЙ И КАЛЕНДАРЯ =================
@@ -248,9 +267,18 @@ def download_pdf_bytes(pdf_url: str) -> bytes:
     return data
 
 
-def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -> str:
+def generate_draft_with_gemini(
+    article: dict,
+    occasion: str,
+    pdf_bytes: bytes,
+    mode: str = "date",
+) -> str:
     article_url = f"{SITE_BASE_URL}#article-{article['id']}"
-    prompt_template = PROMPT_FILE.read_text(encoding="utf-8")
+    prompt_path = ARTICLE_PROMPT_FILE if mode == "article" else DATE_PROMPT_FILE
+    if not prompt_path.exists():
+        raise RuntimeError(f"Не найден файл промпта: {prompt_path}")
+
+    prompt_template = prompt_path.read_text(encoding="utf-8")
     prompt = prompt_template.format(
         occasion=occasion,
         title=article["title"],
@@ -283,7 +311,7 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
         "Content-Type": "application/json",
     }
 
-   # Собираем список моделей из API: первыми идут самые свежие flash-модели
+    # Собираем список моделей из API: первыми идут самые свежие flash-модели
     candidate_models = [GEMINI_MODEL] if GEMINI_MODEL else []
     try:
         m_resp = requests.get(
@@ -358,14 +386,17 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
     text = re.sub(r"^```(?:html)?\s*", "", text, flags=re.I)
     text = re.sub(r"\s*```$", "", text).strip()
 
-    # Убираем случайные запрещённые хештеги и гарантируем прямую ссылку + #дата в конце
+    # Убираем запрещённые хештеги и гарантируем прямую ссылку + нужный тег в конце
+    final_tag = "#статья" if mode == "article" else "#дата"
     text = re.sub(
         r"#(?:новости|новость|спойлер|новый_выпуск|выпуск|афиша)(?:_[a-zA-Zа-яА-ЯёЁ0-9]+)?",
         "",
         text,
         flags=re.I,
     )
-    text = re.sub(r"(?:\s*#дата\b)+\s*$", "", text, flags=re.I).strip()
+    if mode == "article":
+        text = re.sub(r"#дата\b", "", text, flags=re.I)
+    text = re.sub(r"(?:\s*#(?:дата|статья)\b)+\s*$", "", text, flags=re.I).strip()
 
     cta_line = f"Полную статью читайте на сайте АТО: {article_url}"
     if article_url not in text:
@@ -380,7 +411,7 @@ def generate_draft_with_gemini(article: dict, occasion: str, pdf_bytes: bytes) -
             text = f"{text}\n\n{cta_line}"
 
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
-    return f"{text}\n\n#дата"
+    return f"{text}\n\n{final_tag}"
 
 
 def send_draft_to_telegram(draft_text: str, article: dict) -> None:
@@ -448,7 +479,7 @@ def main() -> int:
     sent_log = load_sent_log()
     log_changed = False
 
-    targets: list[tuple[dict, str, bool]] = []
+    targets: list[tuple[dict, str, str, bool]] = []
 
     if MANUAL_ARTICLE_QUERY:
         q = MANUAL_ARTICLE_QUERY.lower()
@@ -456,8 +487,12 @@ def main() -> int:
             if not art["pdf_url"]:
                 continue
             if (q.isdigit() and art["id"] == int(q)) or (q in art["title"].lower()):
-                occasion = art["title"]
-                targets.append((art, occasion, False))  # ручной тест не блокирует будущую автоотправку
+                if POST_MODE in ("article", "date"):
+                    mode = POST_MODE
+                else:
+                    mode = "date" if art["tags"] else "article"
+                occasion = resolve_manual_occasion(art) if mode == "date" else ""
+                targets.append((art, occasion, mode, False))  # ручной тест не блокирует будущую автоотправку
                 break
         if not targets:
             print(f"Статья по запросу «{MANUAL_ARTICLE_QUERY}» не найдена.")
@@ -490,18 +525,19 @@ def main() -> int:
                 print(f"Пропуск (уже отправлялось в {cal['hebrew_year']}): {art['title']}")
                 continue
 
-            targets.append((art, occasion, True))
+            targets.append((art, occasion, "date", True))
 
     if not targets:
         print("На ближайшие даты подходящих статей нет — выходим молча.")
         return 0
 
-    for art, occasion, should_record in targets:
-        print(f"Генерация черновика: «{art['title']}» (повод: {occasion})...")
+    for art, occasion, mode, should_record in targets:
+        mode_label = f"повод: {occasion}" if mode == "date" else "общая статья (#статья)"
+        print(f"Генерация черновика: «{art['title']}» ({mode_label})...")
         pdf_bytes = download_pdf_bytes(art["pdf_url"])
-        draft = generate_draft_with_gemini(art, occasion, pdf_bytes)
+        draft = generate_draft_with_gemini(art, occasion, pdf_bytes, mode=mode)
         send_draft_to_telegram(draft, art)
-        print(f"Отправлено в канал черновиков: «{art['title']}» (#article-{art['id']})")
+        print(f"Отправлено в канал черновиков: «{art['title']}» (#article-{art['id']}, режим={mode})")
 
         if should_record:
             sent_key = f"{cal['hebrew_year']}:article-{art['id']}"
